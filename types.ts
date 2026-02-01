@@ -42,6 +42,21 @@ export interface UserStats {
   categoryCounts: Record<TaskCategory, number>;
 }
 
+// 每日任务完成明细
+export interface DailyTaskCompletion {
+  date: string; // YYYY-MM-DD
+  tasks: Array<{
+    id: string;
+    title: string;
+    icon: string;
+    points: number;
+    category: TaskCategory;
+    completedTime: string; // ISO timestamp
+  }>;
+  totalPoints: number; // 当天获得的总积分
+  totalTasks: number; // 当天完成的任务数
+}
+
 // Added UserState for ProfileTab compatibility
 export interface UserState {
   name: string;
@@ -57,13 +72,14 @@ export interface ChildProfile {
   name: string;
   avatar: string; // Emoji
   themeColor: string; // e.g., 'blue', 'pink', 'green'
-  
+
   // Data specific to this child
   tasks: Task[];
   rewards: Reward[];
-  badges: Badge[]; 
+  badges: Badge[];
   history: Record<string, number>; // Date YYYY-MM-DD -> count of completed tasks
-  
+  dailyHistory: Record<string, DailyTaskCompletion>; // Date YYYY-MM-DD -> detailed completion data
+
   // State
   totalPoints: number; // Current spendable points
   currentStreak: number;

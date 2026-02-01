@@ -36,21 +36,26 @@ const App: React.FC = () => {
         const today = new Date().toISOString().split('T')[0];
         
         const updatedChildren = parsed.children.map(child => {
+           // 确保 dailyHistory 字段存在（兼容旧数据）
+           if (!child.dailyHistory) {
+               child.dailyHistory = {};
+           }
+
            // Reset daily tasks logic
            if (child.lastLoginDate !== today) {
                const tasks = child.tasks.map(t => ({...t, completed: false}));
-               
+
                const yesterday = new Date();
                yesterday.setDate(yesterday.getDate() - 1);
                const yesterdayStr = yesterday.toISOString().split('T')[0];
-               
+
                let newStreak = child.currentStreak;
                if (child.lastLoginDate === yesterdayStr) {
                    newStreak += 1;
                } else {
                    newStreak = 1;
                }
-               
+
                return {
                    ...child,
                    lastLoginDate: today,
@@ -85,6 +90,7 @@ const App: React.FC = () => {
                  rewards: oldData.rewards || [],
                  badges: oldData.badges || [],
                  history: oldData.history || {},
+                 dailyHistory: {}, // 旧数据没有详细记录，从现在开始记录
                  totalPoints: oldData.user.totalPoints || 0,
                  currentStreak: oldData.user.currentStreak || 0,
                  lastLoginDate: oldData.user.lastLoginDate || new Date().toISOString().split('T')[0],
@@ -163,20 +169,44 @@ const App: React.FC = () => {
 
   const handleCompleteTask = async (id: string) => {
     if (!currentChild) return;
-    
+
     const task = currentChild.tasks.find(t => t.id === id);
     if (!task || task.completed) return;
 
     // We can't use simple updateCurrentChild efficiently because we need to chain updates for badge check
     // So we manually calculate the new state for the child
-    
+
     const today = new Date().toISOString().split('T')[0];
-    
+    const completedTime = new Date().toISOString();
+
     const updatedTasks = currentChild.tasks.map(t => t.id === id ? { ...t, completed: true } : t);
     const updatedHistory = {
         ...currentChild.history,
         [today]: (currentChild.history[today] || 0) + 1
     };
+
+    // 更新每日详细记录
+    const todayHistory = currentChild.dailyHistory?.[today] || { date: today, tasks: [], totalPoints: 0, totalTasks: 0 };
+    const newDailyHistory = {
+        ...currentChild.dailyHistory,
+        [today]: {
+            date: today,
+            tasks: [
+                ...todayHistory.tasks,
+                {
+                    id: task.id,
+                    title: task.title,
+                    icon: task.icon,
+                    points: task.points,
+                    category: task.category,
+                    completedTime
+                }
+            ],
+            totalPoints: todayHistory.totalPoints + task.points,
+            totalTasks: todayHistory.totalTasks + 1
+        }
+    };
+
     const updatedStats = {
         ...currentChild.stats,
         totalTasksCompleted: currentChild.stats.totalTasksCompleted + 1,
@@ -186,11 +216,12 @@ const App: React.FC = () => {
             [task.category]: (currentChild.stats.categoryCounts[task.category] || 0) + 1
         }
     };
-    
+
     let updatedChild: ChildProfile = {
         ...currentChild,
         tasks: updatedTasks,
         history: updatedHistory,
+        dailyHistory: newDailyHistory,
         stats: updatedStats,
         totalPoints: currentChild.totalPoints + task.points
     };
