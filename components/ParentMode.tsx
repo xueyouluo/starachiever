@@ -3,6 +3,7 @@ import { Task, Reward, Badge, TaskCategory, BadgeCriteriaType, ChildProfile } fr
 import { X, Trash2, Plus, Users, UserPlus, Lock, KeyRound, Download } from 'lucide-react';
 import { createDefaultChild } from '../constants';
 import { exportChildrenToExcel } from './exportToExcel';
+import { AlertModal } from './Modal';
 
 interface ParentModeProps {
   isOpen: boolean;
@@ -15,17 +16,25 @@ interface ParentModeProps {
   onSetPassword: (password: string) => void;
 }
 
-const ParentMode: React.FC<ParentModeProps> = ({ 
+const ParentMode: React.FC<ParentModeProps> = ({
   isOpen, onClose, childrenList, setChildrenList, activeChildId, setActiveChildId,
   savedPassword, onSetPassword
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
+
   // Auth State
   const [inputPassword, setInputPassword] = useState('');
   const [setupPassword, setSetupPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  
+
+  // 弹窗状态
+  const [alertModal, setAlertModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'success' | 'error' | 'info' | 'warning';
+  }>({ isOpen: false, title: '', message: '', type: 'info' });
+
   const [activeTab, setActiveTab] = useState<'children' | 'tasks' | 'rewards' | 'badges'>('children');
   const [editingChildId, setEditingChildId] = useState<string | null>(activeChildId);
 
@@ -48,7 +57,12 @@ const ParentMode: React.FC<ParentModeProps> = ({
       if (inputPassword === savedPassword) {
           setIsAuthenticated(true);
       } else {
-          alert("密码错误哦，请重试");
+          setAlertModal({
+              isOpen: true,
+              title: '密码错误',
+              message: '密码错误哦，请重试',
+              type: 'error'
+          });
           setInputPassword('');
       }
   };
@@ -57,16 +71,31 @@ const ParentMode: React.FC<ParentModeProps> = ({
   const handleSetup = (e: React.FormEvent) => {
       e.preventDefault();
       if (setupPassword.length < 4) {
-          alert("密码太短啦，至少设置4位哦");
+          setAlertModal({
+              isOpen: true,
+              title: '密码太短',
+              message: '密码太短啦，至少设置4位哦',
+              type: 'warning'
+          });
           return;
       }
       if (setupPassword !== confirmPassword) {
-          alert("两次输入的密码不一样哦");
+          setAlertModal({
+              isOpen: true,
+              title: '密码不匹配',
+              message: '两次输入的密码不一样哦',
+              type: 'error'
+          });
           return;
       }
       onSetPassword(setupPassword);
       setIsAuthenticated(true);
-      alert("密码设置成功！请牢记您的家长密码。");
+      setAlertModal({
+          isOpen: true,
+          title: '设置成功',
+          message: '密码设置成功！请牢记您的家长密码。',
+          type: 'success'
+      });
   };
 
   const reset = () => {
@@ -90,7 +119,7 @@ const ParentMode: React.FC<ParentModeProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="bg-white rounded-3xl w-full max-w-lg h-[85vh] flex flex-col relative overflow-hidden shadow-2xl">
         <button onClick={reset} className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full hover:bg-gray-200 z-20">
@@ -102,15 +131,15 @@ const ParentMode: React.FC<ParentModeProps> = ({
              <div className="bg-white p-4 rounded-full shadow-lg mb-6 text-kid-blue">
                 <Lock size={48} />
              </div>
-             
+
              {/* If no password saved, show Setup Mode */}
              {!savedPassword ? (
                  <div className="w-full max-w-xs">
                      <h2 className="text-2xl font-black mb-2 text-center text-gray-800">设置家长密码 🛡️</h2>
                      <p className="mb-6 text-gray-500 text-center text-sm">为了防止小朋友误操作，请先设置一个密码。</p>
                      <form onSubmit={handleSetup} className="space-y-4">
-                         <input 
-                            type="password" 
+                         <input
+                            type="password"
                             inputMode="numeric"
                             value={setupPassword}
                             onChange={(e) => setSetupPassword(e.target.value)}
@@ -118,8 +147,8 @@ const ParentMode: React.FC<ParentModeProps> = ({
                             placeholder="输入新密码"
                             autoFocus
                          />
-                         <input 
-                            type="password" 
+                         <input
+                            type="password"
                             inputMode="numeric"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -137,8 +166,8 @@ const ParentMode: React.FC<ParentModeProps> = ({
                      <h2 className="text-2xl font-black mb-2 text-center text-gray-800">家长验证 🛡️</h2>
                      <p className="mb-6 text-gray-500 text-center text-sm">请输入密码进入设置中心。</p>
                      <form onSubmit={handleLogin} className="space-y-4">
-                         <input 
-                            type="password" 
+                         <input
+                            type="password"
                             inputMode="numeric"
                             value={inputPassword}
                             onChange={(e) => setInputPassword(e.target.value)}
@@ -159,17 +188,17 @@ const ParentMode: React.FC<ParentModeProps> = ({
           <div className="flex-1 flex flex-col overflow-hidden animate-fadeIn">
              <div className="p-6 pb-2 border-b bg-white z-10">
                <h2 className="text-xl font-bold mb-4">家长设置中心 ⚙️</h2>
-               
+
                {/* Tab Navigation */}
                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                 <button 
+                 <button
                     onClick={() => setActiveTab('children')}
                     className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-1 ${activeTab === 'children' ? 'bg-kid-pink text-white' : 'bg-gray-100 text-gray-500'}`}
                  >
                      <Users size={14} /> 成员
                  </button>
                  {childrenList.length > 0 && ['tasks', 'rewards', 'badges'].map((t) => (
-                   <button 
+                   <button
                     key={t}
                     onClick={() => setActiveTab(t as any)}
                     className={`px-4 py-2 rounded-full text-sm font-bold capitalize transition-colors ${activeTab === t ? 'bg-kid-blue text-white' : 'bg-gray-100 text-gray-500'}`}
@@ -178,12 +207,12 @@ const ParentMode: React.FC<ParentModeProps> = ({
                    </button>
                  ))}
                </div>
-               
+
                {/* Context Selector for Tasks/Rewards/Badges */}
                {activeTab !== 'children' && childrenList.length > 0 && (
                    <div className="mt-4 flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
                        <span className="text-xs font-bold text-gray-400">正在编辑:</span>
-                       <select 
+                       <select
                         value={editingChildId || ''}
                         onChange={(e) => setEditingChildId(e.target.value)}
                         className="bg-white border border-gray-200 text-sm font-bold rounded-md px-2 py-1 flex-1 outline-none text-kid-blue"
@@ -195,32 +224,32 @@ const ParentMode: React.FC<ParentModeProps> = ({
                    </div>
                )}
              </div>
-             
+
              <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
                 {activeTab === 'children' && (
-                    <ChildrenManager 
-                        childrenList={childrenList} 
+                    <ChildrenManager
+                        childrenList={childrenList}
                         setChildrenList={setChildrenList}
                         activeChildId={activeChildId}
                         setActiveChildId={setActiveChildId}
                     />
                 )}
                 {activeTab === 'tasks' && childrenList.length > 0 && (
-                    <TasksManager 
-                        tasks={getEditingChild()?.tasks || []} 
-                        setTasks={(newTasks) => updateEditingChild(c => ({...c, tasks: newTasks}))} 
+                    <TasksManager
+                        tasks={getEditingChild()?.tasks || []}
+                        setTasks={(newTasks) => updateEditingChild(c => ({...c, tasks: newTasks}))}
                     />
                 )}
                 {activeTab === 'rewards' && childrenList.length > 0 && (
-                    <RewardsManager 
-                        rewards={getEditingChild()?.rewards || []} 
-                        setRewards={(newRewards) => updateEditingChild(c => ({...c, rewards: newRewards}))} 
+                    <RewardsManager
+                        rewards={getEditingChild()?.rewards || []}
+                        setRewards={(newRewards) => updateEditingChild(c => ({...c, rewards: newRewards}))}
                     />
                 )}
                 {activeTab === 'badges' && childrenList.length > 0 && (
-                    <BadgesManager 
-                        badges={getEditingChild()?.badges || []} 
-                        setBadges={(newBadges) => updateEditingChild(c => ({...c, badges: newBadges}))} 
+                    <BadgesManager
+                        badges={getEditingChild()?.badges || []}
+                        setBadges={(newBadges) => updateEditingChild(c => ({...c, badges: newBadges}))}
                     />
                 )}
              </div>
@@ -229,6 +258,20 @@ const ParentMode: React.FC<ParentModeProps> = ({
       </div>
     </div>
   );
+
+  // 弹窗组件
+  return (
+    <>
+      {modalContent}
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+        onClose={() => setAlertModal({ isOpen: false, title: '', message: '', type: 'info' })}
+      />
+    </>
+  );
 };
 
 // --- Sub-components ---
@@ -236,7 +279,7 @@ const ParentMode: React.FC<ParentModeProps> = ({
 const ChildrenManager = ({ childrenList, setChildrenList, activeChildId, setActiveChildId }: any) => {
     const [newName, setNewName] = useState('');
     const [newAvatar, setNewAvatar] = useState('👶');
-    
+
     const handleAddChild = () => {
         if (!newName.trim()) return;
         const newChild = createDefaultChild(newName, newAvatar);

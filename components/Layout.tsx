@@ -26,14 +26,14 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, point
             <span>⭐️</span>
             <span>{points}</span>
           </div>
-          <button 
+          <button
             onClick={onOpenParentMode}
             className="p-2 text-gray-300 hover:text-gray-500 transition-colors"
           >
             <Settings size={20} />
           </button>
         </div>
-       
+
       </div>
 
       {/* Main Content Area */}
@@ -43,29 +43,29 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, point
 
       {/* Bottom Navigation */}
       <nav className="absolute bottom-0 w-full bg-white border-t border-gray-100 p-2 pb-6 px-2 flex justify-between items-center z-20 rounded-t-3xl shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
-        <NavButton 
-          isActive={activeTab === Tab.TASKS} 
+        <NavButton
+          isActive={activeTab === Tab.TASKS}
           onClick={() => onTabChange(Tab.TASKS)}
           icon={<CheckCircle size={24} />}
           label="任务"
           color="text-kid-blue"
         />
-        <NavButton 
-          isActive={activeTab === Tab.CALENDAR} 
+        <NavButton
+          isActive={activeTab === Tab.CALENDAR}
           onClick={() => onTabChange(Tab.CALENDAR)}
           icon={<CalendarDays size={24} />}
           label="日历"
           color="text-orange-400"
         />
-        <NavButton 
-          isActive={activeTab === Tab.REWARDS} 
+        <NavButton
+          isActive={activeTab === Tab.REWARDS}
           onClick={() => onTabChange(Tab.REWARDS)}
           icon={<Gift size={24} />}
           label="奖励"
           color="text-kid-green"
         />
-         <NavButton 
-          isActive={activeTab === Tab.PROFILE} 
+         <NavButton
+          isActive={activeTab === Tab.PROFILE}
           onClick={() => onTabChange(Tab.PROFILE)}
           icon={<User size={24} />}
           label="我的"
@@ -76,14 +76,14 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, point
   );
 };
 
-const NavButton: React.FC<{ 
-  isActive: boolean; 
-  onClick: () => void; 
-  icon: React.ReactNode; 
+const NavButton: React.FC<{
+  isActive: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
   label: string;
   color: string;
 }> = ({ isActive, onClick, icon, label, color }) => (
-  <button 
+  <button
     onClick={onClick}
     className={`flex flex-col items-center gap-1 w-16 transition-all duration-300 ${isActive ? '-translate-y-2' : 'opacity-60 hover:opacity-100'}`}
   >

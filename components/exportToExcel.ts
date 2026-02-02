@@ -30,10 +30,48 @@ export const exportChildrenToExcel = (children: ChildProfile[]) => {
     sheetData.push(['累计统计', '']);
     sheetData.push(['完成任务总数', child.stats.totalTasksCompleted]);
     sheetData.push(['获得积分总数', child.stats.totalPointsEarned]);
+    sheetData.push(['兑换奖励次数', child.stats.totalRewardsRedeemed || child.redemptions?.length || 0]);
+    sheetData.push(['累计消耗积分', child.redemptions?.reduce((sum, r) => sum + r.cost, 0) || 0]);
     sheetData.push(['学习类任务', child.stats.categoryCounts.learning || 0]);
     sheetData.push(['健康类任务', child.stats.categoryCounts.health || 0]);
     sheetData.push(['家务类任务', child.stats.categoryCounts.chores || 0]);
     sheetData.push(['其他类任务', child.stats.categoryCounts.other || 0]);
+    sheetData.push([]);
+
+    // 积分消耗记录
+    sheetData.push(['积分消耗记录', '']);
+    sheetData.push([]);
+
+    if (!child.redemptions || child.redemptions.length === 0) {
+      sheetData.push(['暂无兑换记录', '']);
+    } else {
+      // 表头
+      sheetData.push(['日期', '时间', '奖励名称', '奖励图标', '消耗积分']);
+      sheetData.push([]);
+
+      // 按日期排序（从新到旧）
+      const sortedRedemptions = [...child.redemptions].sort((a, b) => b.date.localeCompare(a.date));
+
+      sortedRedemptions.forEach(redemption => {
+        // 格式化时间
+        const redeemedTime = new Date(redemption.redeemedAt);
+        const timeStr = redeemedTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        sheetData.push([
+          redemption.date,
+          timeStr,
+          redemption.rewardTitle,
+          redemption.rewardIcon,
+          redemption.cost
+        ]);
+      });
+
+      // 兑换汇总
+      const totalCost = child.redemptions.reduce((sum, r) => sum + r.cost, 0);
+      const totalCount = child.redemptions.length;
+      sheetData.push([]);
+      sheetData.push(['累计兑换', `共 ${totalCount} 次`, `消耗 ${totalCost} 积分`, '', '']);
+    }
     sheetData.push([]);
 
     // 每日打卡明细
@@ -111,10 +149,10 @@ export const exportChildrenToExcel = (children: ChildProfile[]) => {
     // 设置列宽
     worksheet['!cols'] = [
       { wch: 15 }, // 日期
-      { wch: 12 }, // 任务序号
-      { wch: 25 }, // 任务名称
-      { wch: 8 },  // 任务图标
-      { wch: 10 }, // 积分
+      { wch: 12 }, // 任务序号/时间
+      { wch: 25 }, // 任务名称/奖励名称
+      { wch: 8 },  // 任务图标/奖励图标
+      { wch: 10 }, // 积分/消耗积分
       { wch: 10 }, // 类别
       { wch: 20 }  // 完成时间
     ];

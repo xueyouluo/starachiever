@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Layout from './components/Layout';
 import TaskCard from './components/TaskCard';
 import RewardCard from './components/RewardCard';
 import ProfileTab from './components/ProfileTab';
 import CalendarTab from './components/CalendarTab';
 import ParentMode from './components/ParentMode';
-import { Task, Reward, Tab, AppData, Badge, BadgeCriteria, ChildProfile, UserState } from './types';
+import { ConfirmModal, AlertModal } from './components/Modal';
+import { Task, Reward, Tab, AppData, Badge, BadgeCriteria, ChildProfile, UserState, TaskCategory } from './types';
 import { createDefaultChild, INITIAL_STATS } from './constants';
-import { PlusCircle, User, LogOut } from 'lucide-react';
+import { PlusCircle, User, LogOut, X } from 'lucide-react';
 
 const STORAGE_KEY = 'starachiever_data_v4'; 
 const NEW_STORAGE_KEY = 'starachiever_data_v5'; // Bump version for multi-user support
@@ -23,6 +24,26 @@ const App: React.FC = () => {
   const [newBadge, setNewBadge] = useState<Badge | null>(null);
   const [isParentModeOpen, setIsParentModeOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [showChildSelector, setShowChildSelector] = useState(false);
+  // 默认所有分类都收起
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<TaskCategory>>(
+    new Set(['learning', 'health', 'chores', 'other'])
+  );
+
+  // 弹窗状态
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+
+  const [alertModal, setAlertModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'success' | 'error' | 'info' | 'warning';
+  }>({ isOpen: false, title: '', message: '', type: 'info' });
 
   // Load data from local storage with Migration Logic
   useEffect(() => {
@@ -39,6 +60,11 @@ const App: React.FC = () => {
            // 确保 dailyHistory 字段存在（兼容旧数据）
            if (!child.dailyHistory) {
                child.dailyHistory = {};
+           }
+
+           // 确保 redemptions 字段存在（兼容旧数据）
+           if (!child.redemptions) {
+               child.redemptions = [];
            }
 
            // Reset daily tasks logic
@@ -91,6 +117,7 @@ const App: React.FC = () => {
                  badges: oldData.badges || [],
                  history: oldData.history || {},
                  dailyHistory: {}, // 旧数据没有详细记录，从现在开始记录
+                 redemptions: [], // 旧数据没有兑换记录，从现在开始记录
                  totalPoints: oldData.user.totalPoints || 0,
                  currentStreak: oldData.user.currentStreak || 0,
                  lastLoginDate: oldData.user.lastLoginDate || new Date().toISOString().split('T')[0],
@@ -249,12 +276,50 @@ const App: React.FC = () => {
 
   const handleRedeemReward = (reward: Reward) => {
     if (!currentChild) return;
-    
+
     if (currentChild.totalPoints >= reward.cost) {
-      if(window.confirm(`确定要花 ${reward.cost} 积分兑换 "${reward.title}" 吗?`)) {
-        updateCurrentChild(c => ({...c, totalPoints: c.totalPoints - reward.cost}));
-        alert(`兑换成功！请找爸爸妈妈领取奖励: ${reward.title}`);
-      }
+      setConfirmModal({
+        isOpen: true,
+        title: '确认兑换',
+        message: `确定要花 ${reward.cost} 积分兑换 "${reward.title}" 吗?`,
+        onConfirm: () => {
+          const now = new Date();
+          const today = now.toISOString().split('T')[0];
+          const redeemedAt = now.toISOString();
+
+          // 创建兑换记录
+          const newRedemption = {
+            id: Date.now().toString() + Math.random().toString().slice(2, 6),
+            rewardId: reward.id,
+            rewardTitle: reward.title,
+            rewardIcon: reward.icon,
+            cost: reward.cost,
+            redeemedAt,
+            date: today
+          };
+
+          updateCurrentChild(c => ({
+            ...c,
+            totalPoints: c.totalPoints - reward.cost,
+            redemptions: [...c.redemptions, newRedemption]
+          }));
+
+          setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+          setAlertModal({
+            isOpen: true,
+            title: '兑换成功！',
+            message: `请找爸爸妈妈领取奖励: ${reward.title}`,
+            type: 'success'
+          });
+        }
+      });
+    } else {
+      setAlertModal({
+        isOpen: true,
+        title: '积分不足',
+        message: `还需要 ${reward.cost - currentChild.totalPoints} 积分才能兑换这个奖励哦！`,
+        type: 'warning'
+      });
     }
   };
 
@@ -328,17 +393,49 @@ const App: React.FC = () => {
         const completedTasks = currentChild.tasks.filter(t => t.completed).length;
         const todayPoints = currentChild.tasks.filter(t => t.completed).reduce((sum, t) => sum + t.points, 0);
 
+        // 按分类组织任务
+        const tasksByCategory = currentChild.tasks.reduce((acc, task) => {
+          if (!acc[task.category]) {
+            acc[task.category] = [];
+          }
+          acc[task.category].push(task);
+          return acc;
+        }, {} as Record<TaskCategory, Task[]>);
+
+        const categoryInfo: Record<TaskCategory, { name: string; icon: string; color: string }> = {
+          learning: { name: '学习', icon: '📚', color: 'bg-blue-100 text-blue-700' },
+          health: { name: '健康', icon: '💪', color: 'bg-green-100 text-green-700' },
+          chores: { name: '家务', icon: '🧹', color: 'bg-purple-100 text-purple-700' },
+          other: { name: '其他', icon: '⭐', color: 'bg-yellow-100 text-yellow-700' }
+        };
+
+        const toggleCategory = (category: TaskCategory) => {
+          setCollapsedCategories(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(category)) {
+              newSet.delete(category);
+            } else {
+              newSet.add(category);
+            }
+            return newSet;
+          });
+        };
+
         return (
           <div className="space-y-2">
             <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 text-white mb-6 shadow-lg relative overflow-hidden">
                <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -translate-y-10 translate-x-10"></div>
-               
+
                <div className="relative z-10">
                   <div className="flex justify-between items-start mb-4">
                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl border-2 border-white/30">
+                        <button
+                          onClick={() => childrenList.length > 1 && setShowChildSelector(true)}
+                          className={`w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl border-2 border-white/30 transition-all ${childrenList.length > 1 ? 'hover:bg-white/30 cursor-pointer hover:scale-110' : ''}`}
+                          title={childrenList.length > 1 ? '点击切换宝贝' : ''}
+                        >
                             {currentChild.avatar}
-                        </div>
+                        </button>
                         <div>
                             <h2 className="text-xl font-black mb-1">早安, {currentChild.name}!</h2>
                             <p className="opacity-90 text-xs font-bold">今天也要元气满满哦！</p>
@@ -370,21 +467,46 @@ const App: React.FC = () => {
                 <span>今日任务</span>
                 <span className="text-xs bg-gray-100 text-gray-400 px-2 py-1 rounded-full">{currentChild.name}的任务表</span>
             </h3>
+
             {currentChild.tasks.length === 0 ? (
                <div className="text-center py-10 text-gray-400">
                   <p>还没有任务哦，请家长添加</p>
                </div>
             ) : (
-              currentChild.tasks.map(task => (
-                <TaskCard key={task.id} task={task} onComplete={handleCompleteTask} />
-              ))
-            )}
-            
-            {currentChild.tasks.length > 0 && currentChild.tasks.every(t => t.completed) && (
-               <div className="text-center py-10 opacity-60">
-                  <p className="text-4xl mb-2">🎉</p>
-                  <p className="text-gray-500 font-bold">任务全部完成啦！太棒了！</p>
-               </div>
+              <>
+                {Object.entries(tasksByCategory).map(([category, tasks]) => {
+                  const isCollapsed = collapsedCategories.has(category as TaskCategory);
+                  return (
+                    <div key={category} className="mb-4">
+                      <button
+                        onClick={() => toggleCategory(category as TaskCategory)}
+                        className={`w-full flex items-center gap-2 mb-2 px-3 ${categoryInfo[category as TaskCategory].color} rounded-lg py-2.5 transition-all hover:opacity-90 active:scale-[0.98]`}
+                      >
+                        <span className="text-xl">{categoryInfo[category as TaskCategory].icon}</span>
+                        <h4 className="font-bold flex-1 text-left">{categoryInfo[category as TaskCategory].name}</h4>
+                        <span className="text-xs opacity-70">{tasks.filter(t => t.completed).length}/{tasks.length}</span>
+                        <span className={`transition-transform duration-300 ${isCollapsed ? 'rotate-[-90deg]' : ''}`}>
+                          ▼
+                        </span>
+                      </button>
+                      {!isCollapsed && (
+                        <div className="space-y-2 animate-fadeIn">
+                          {tasks.map(task => (
+                            <TaskCard key={task.id} task={task} onComplete={handleCompleteTask} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {currentChild.tasks.every(t => t.completed) && (
+                   <div className="text-center py-10 opacity-60">
+                      <p className="text-4xl mb-2">🎉</p>
+                      <p className="text-gray-500 font-bold">任务全部完成啦！太棒了！</p>
+                   </div>
+                )}
+              </>
             )}
           </div>
         );
@@ -485,7 +607,7 @@ const App: React.FC = () => {
       )}
 
       {/* Parent Mode Modal */}
-      <ParentMode 
+      <ParentMode
         isOpen={isParentModeOpen}
         onClose={() => setIsParentModeOpen(false)}
         childrenList={childrenList}
@@ -494,6 +616,63 @@ const App: React.FC = () => {
         setActiveChildId={setActiveChildId}
         savedPassword={parentPassword}
         onSetPassword={setParentPassword}
+      />
+
+      {/* Child Selector Modal */}
+      {showChildSelector && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-md rounded-t-3xl p-6 animate-slide-up">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-800">选择宝贝</h3>
+              <button
+                onClick={() => setShowChildSelector(false)}
+                className="p-2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {childrenList.map(child => (
+                <button
+                  key={child.id}
+                  onClick={() => {
+                    setActiveChildId(child.id);
+                    setShowChildSelector(false);
+                  }}
+                  className={`p-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${
+                    child.id === activeChildId
+                      ? 'bg-indigo-100 border-2 border-indigo-500'
+                      : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                  }`}
+                >
+                  <div className="text-4xl">{child.avatar}</div>
+                  <span className="font-bold text-gray-700">{child.name}</span>
+                  <span className="text-xs text-gray-400">⭐️ {child.totalPoints}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Modals */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={() => {
+          confirmModal.onConfirm();
+          setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+        }}
+        onCancel={() => setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: () => {} })}
+      />
+
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+        onClose={() => setAlertModal({ isOpen: false, title: '', message: '', type: 'info' })}
       />
     </Layout>
   );

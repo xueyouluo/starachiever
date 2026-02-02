@@ -87,6 +87,7 @@ export const createDefaultChild = (name: string, avatar: string = '👶'): Child
   badges: [...INITIAL_BADGES],
   history: {},
   dailyHistory: {},
+  redemptions: [],
   totalPoints: 0,
   currentStreak: 0,
   lastLoginDate: new Date().toISOString().split('T')[0],

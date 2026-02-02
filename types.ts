@@ -57,6 +57,17 @@ export interface DailyTaskCompletion {
   totalTasks: number; // 当天完成的任务数
 }
 
+// 积分消耗记录
+export interface PointRedemption {
+  id: string;
+  rewardId: string;
+  rewardTitle: string;
+  rewardIcon: string;
+  cost: number; // 消耗的积分
+  redeemedAt: string; // ISO timestamp
+  date: string; // YYYY-MM-DD，方便按日期查询
+}
+
 // Added UserState for ProfileTab compatibility
 export interface UserState {
   name: string;
@@ -79,6 +90,7 @@ export interface ChildProfile {
   badges: Badge[];
   history: Record<string, number>; // Date YYYY-MM-DD -> count of completed tasks
   dailyHistory: Record<string, DailyTaskCompletion>; // Date YYYY-MM-DD -> detailed completion data
+  redemptions: PointRedemption[]; // 积分兑换记录
 
   // State
   totalPoints: number; // Current spendable points
