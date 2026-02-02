@@ -121,30 +121,32 @@ const ParentMode: React.FC<ParentModeProps> = ({
   if (!isOpen) return null;
 
   const modalContent = (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-3xl w-full max-w-lg h-[85vh] flex flex-col relative overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 md:p-6">
+      <div className="bg-white rounded-3xl w-full max-w-lg md:max-w-3xl h-[85vh] md:h-[80vh] flex flex-col relative overflow-hidden shadow-2xl">
         <button onClick={reset} className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full hover:bg-gray-200 z-20">
-          <X size={20} />
+          <X size={20} className="md:hidden" />
+          <X size={24} className="hidden md:block" />
         </button>
 
         {!isAuthenticated ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-50">
-             <div className="bg-white p-4 rounded-full shadow-lg mb-6 text-kid-blue">
-                <Lock size={48} />
+          <div className="flex-1 flex flex-col items-center justify-center p-8 md:p-12 bg-gray-50">
+             <div className="bg-white p-4 md:p-6 rounded-full shadow-lg mb-6 text-kid-blue">
+                <Lock size={48} className="md:hidden" />
+                <Lock size={64} className="hidden md:block" />
              </div>
 
              {/* If no password saved, show Setup Mode */}
              {!savedPassword ? (
-                 <div className="w-full max-w-xs">
-                     <h2 className="text-2xl font-black mb-2 text-center text-gray-800">设置家长密码 🛡️</h2>
-                     <p className="mb-6 text-gray-500 text-center text-sm">为了防止小朋友误操作，请先设置一个密码。</p>
+                 <div className="w-full max-w-xs md:max-w-sm">
+                     <h2 className="text-2xl md:text-3xl font-black mb-2 text-center text-gray-800">设置家长密码 🛡️</h2>
+                     <p className="mb-6 text-gray-500 text-center text-sm md:text-base">为了防止小朋友误操作，请先设置一个密码。</p>
                      <form onSubmit={handleSetup} className="space-y-4">
                          <input
                             type="password"
                             inputMode="numeric"
                             value={setupPassword}
                             onChange={(e) => setSetupPassword(e.target.value)}
-                            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-center text-xl outline-none focus:border-kid-blue transition-colors"
+                            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-center text-xl md:text-2xl outline-none focus:border-kid-blue transition-colors"
                             placeholder="输入新密码"
                             autoFocus
                          />
@@ -153,31 +155,32 @@ const ParentMode: React.FC<ParentModeProps> = ({
                             inputMode="numeric"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-center text-xl outline-none focus:border-kid-blue transition-colors"
+                            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-center text-xl md:text-2xl outline-none focus:border-kid-blue transition-colors"
                             placeholder="再次输入确认"
                          />
-                         <button type="submit" className="w-full bg-kid-blue text-white py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-600 transition-colors">
+                         <button type="submit" className="w-full bg-kid-blue text-white py-3 md:py-4 rounded-xl font-bold shadow-lg hover:bg-indigo-600 transition-colors text-base md:text-lg">
                              保存并进入
                          </button>
                      </form>
                  </div>
              ) : (
                  /* Login Mode */
-                 <div className="w-full max-w-xs">
-                     <h2 className="text-2xl font-black mb-2 text-center text-gray-800">家长验证 🛡️</h2>
-                     <p className="mb-6 text-gray-500 text-center text-sm">请输入密码进入设置中心。</p>
+                 <div className="w-full max-w-xs md:max-w-sm">
+                     <h2 className="text-2xl md:text-3xl font-black mb-2 text-center text-gray-800">家长验证 🛡️</h2>
+                     <p className="mb-6 text-gray-500 text-center text-sm md:text-base">请输入密码进入设置中心。</p>
                      <form onSubmit={handleLogin} className="space-y-4">
                          <input
                             type="password"
                             inputMode="numeric"
                             value={inputPassword}
                             onChange={(e) => setInputPassword(e.target.value)}
-                            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-center text-xl outline-none focus:border-kid-blue transition-colors"
+                            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-center text-xl md:text-2xl outline-none focus:border-kid-blue transition-colors"
                             placeholder="输入密码"
                             autoFocus
                          />
-                         <button type="submit" className="w-full bg-kid-blue text-white py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-600 transition-colors flex items-center justify-center gap-2">
-                             <KeyRound size={18} />
+                         <button type="submit" className="w-full bg-kid-blue text-white py-3 md:py-4 rounded-xl font-bold shadow-lg hover:bg-indigo-600 transition-colors flex items-center justify-center gap-2 text-base md:text-lg">
+                             <KeyRound size={18} className="md:hidden" />
+                             <KeyRound size={22} className="hidden md:block" />
                              验证进入
                          </button>
                      </form>
@@ -188,21 +191,23 @@ const ParentMode: React.FC<ParentModeProps> = ({
           /* Settings Panel (Authenticated) */
           <div className="flex-1 flex flex-col overflow-hidden animate-fadeIn">
              <div className="p-6 pb-2 border-b bg-white z-10">
-               <h2 className="text-xl font-bold mb-4">家长设置中心 ⚙️</h2>
+               <h2 className="text-xl md:text-2xl font-bold mb-4">家长设置中心 ⚙️</h2>
 
                {/* Tab Navigation */}
                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                  <button
                     onClick={() => setActiveTab('children')}
-                    className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-1 ${activeTab === 'children' ? 'bg-kid-pink text-white' : 'bg-gray-100 text-gray-500'}`}
+                    className={`px-4 py-2 rounded-full text-sm md:text-base font-bold whitespace-nowrap transition-colors flex items-center gap-1 ${activeTab === 'children' ? 'bg-kid-pink text-white' : 'bg-gray-100 text-gray-500'}`}
                  >
-                     <Users size={14} /> 成员
+                     <Users size={14} className="md:hidden" />
+                     <Users size={18} className="hidden md:block" />
+                     成员
                  </button>
                  {childrenList.length > 0 && ['tasks', 'rewards', 'badges', 'categories'].map((t) => (
                    <button
                     key={t}
                     onClick={() => setActiveTab(t as any)}
-                    className={`px-4 py-2 rounded-full text-sm font-bold capitalize transition-colors ${activeTab === t ? 'bg-kid-blue text-white' : 'bg-gray-100 text-gray-500'}`}
+                    className={`px-4 py-2 rounded-full text-sm md:text-base font-bold capitalize transition-colors ${activeTab === t ? 'bg-kid-blue text-white' : 'bg-gray-100 text-gray-500'}`}
                    >
                      {t === 'tasks' ? '任务' : t === 'rewards' ? '奖励' : t === 'badges' ? '勋章' : '分类'}
                    </button>
@@ -212,11 +217,11 @@ const ParentMode: React.FC<ParentModeProps> = ({
                {/* Context Selector for Tasks/Rewards/Badges */}
                {activeTab !== 'children' && childrenList.length > 0 && (
                    <div className="mt-4 flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
-                       <span className="text-xs font-bold text-gray-400">正在编辑:</span>
+                       <span className="text-xs md:text-sm font-bold text-gray-400">正在编辑:</span>
                        <select
                         value={editingChildId || ''}
                         onChange={(e) => setEditingChildId(e.target.value)}
-                        className="bg-white border border-gray-200 text-sm font-bold rounded-md px-2 py-1 flex-1 outline-none text-kid-blue"
+                        className="bg-white border border-gray-200 text-sm md:text-base font-bold rounded-md px-2 py-1 flex-1 outline-none text-kid-blue"
                        >
                            {childrenList.map(c => (
                                <option key={c.id} value={c.id}>{c.avatar} {c.name}</option>
