@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Task, Reward, Badge, TaskCategory, BadgeCriteriaType, ChildProfile } from '../types';
-import { X, Trash2, Plus, Users, UserPlus, Lock, KeyRound, Download, FileJson } from 'lucide-react';
+import { Task, Reward, Badge, TaskCategory, BadgeCriteriaType, ChildProfile, Category } from '../types';
+import { X, Trash2, Plus, Users, UserPlus, Lock, KeyRound, Download, FileJson, Archive, ArchiveRestore } from 'lucide-react';
 import { createDefaultChild } from '../constants';
 import { exportChildrenToExcel, exportDataToJSON } from './exportToExcel';
 import { AlertModal } from './Modal';
+import { CATEGORY_COLORS, CATEGORY_ICONS, getCategoryName } from '../constants/categories';
 
 interface ParentModeProps {
   isOpen: boolean;
@@ -35,7 +36,7 @@ const ParentMode: React.FC<ParentModeProps> = ({
     type: 'success' | 'error' | 'info' | 'warning';
   }>({ isOpen: false, title: '', message: '', type: 'info' });
 
-  const [activeTab, setActiveTab] = useState<'children' | 'tasks' | 'rewards' | 'badges'>('children');
+  const [activeTab, setActiveTab] = useState<'children' | 'tasks' | 'rewards' | 'badges' | 'categories'>('children');
   const [editingChildId, setEditingChildId] = useState<string | null>(activeChildId);
 
   useEffect(() => {
@@ -197,13 +198,13 @@ const ParentMode: React.FC<ParentModeProps> = ({
                  >
                      <Users size={14} /> 成员
                  </button>
-                 {childrenList.length > 0 && ['tasks', 'rewards', 'badges'].map((t) => (
+                 {childrenList.length > 0 && ['tasks', 'rewards', 'badges', 'categories'].map((t) => (
                    <button
                     key={t}
                     onClick={() => setActiveTab(t as any)}
                     className={`px-4 py-2 rounded-full text-sm font-bold capitalize transition-colors ${activeTab === t ? 'bg-kid-blue text-white' : 'bg-gray-100 text-gray-500'}`}
                    >
-                     {t === 'tasks' ? '任务' : t === 'rewards' ? '奖励' : '勋章'}
+                     {t === 'tasks' ? '任务' : t === 'rewards' ? '奖励' : t === 'badges' ? '勋章' : '分类'}
                    </button>
                  ))}
                </div>
@@ -239,6 +240,7 @@ const ParentMode: React.FC<ParentModeProps> = ({
                     <TasksManager
                         tasks={getEditingChild()?.tasks || []}
                         setTasks={(newTasks) => updateEditingChild(c => ({...c, tasks: newTasks}))}
+                        categories={getEditingChild()?.categories || []}
                     />
                 )}
                 {activeTab === 'rewards' && childrenList.length > 0 && (
@@ -251,6 +253,14 @@ const ParentMode: React.FC<ParentModeProps> = ({
                     <BadgesManager
                         badges={getEditingChild()?.badges || []}
                         setBadges={(newBadges) => updateEditingChild(c => ({...c, badges: newBadges}))}
+                        categories={getEditingChild()?.categories || []}
+                    />
+                )}
+                {activeTab === 'categories' && childrenList.length > 0 && (
+                    <CategoriesManager
+                        categories={getEditingChild()?.categories || []}
+                        setCategories={(newCategories) => updateEditingChild(c => ({...c, categories: newCategories}))}
+                        tasks={getEditingChild()?.tasks || []}
                     />
                 )}
              </div>
@@ -386,11 +396,14 @@ const ChildrenManager = ({ childrenList, setChildrenList, activeChildId, setActi
 };
 
 
-const TasksManager = ({ tasks, setTasks }: { tasks: Task[], setTasks: (t: Task[]) => void }) => {
+const TasksManager = ({ tasks, setTasks, categories }: { tasks: Task[], setTasks: (t: Task[]) => void, categories: Category[] }) => {
   const [newTitle, setNewTitle] = useState('');
   const [newPoints, setNewPoints] = useState(5);
   const [newIcon, setNewIcon] = useState('🌟');
-  const [newCategory, setNewCategory] = useState<TaskCategory>('other');
+  // 过滤出未归档的分类，并默认选择第一个
+  const activeCategories = categories.filter(c => !c.isArchived);
+  const defaultCategory = activeCategories.length > 0 ? activeCategories[0].id : '';
+  const [newCategory, setNewCategory] = useState<string>(defaultCategory);
 
   const add = () => {
     if (!newTitle) return;
@@ -407,6 +420,12 @@ const TasksManager = ({ tasks, setTasks }: { tasks: Task[], setTasks: (t: Task[]
     setNewTitle('');
   };
 
+  // 获取分类名称的辅助函数
+  const getCategoryName = (categoryId: string) => {
+    const cat = categories.find(c => c.id === categoryId);
+    return cat ? cat.name : categoryId;
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-white p-4 rounded-xl shadow-sm space-y-3">
@@ -415,30 +434,33 @@ const TasksManager = ({ tasks, setTasks }: { tasks: Task[], setTasks: (t: Task[]
         <div className="flex gap-2">
           <input className="w-20 border p-2 rounded-lg text-center" type="number" value={newPoints} onChange={e => setNewPoints(Number(e.target.value))} />
           <input className="w-16 border p-2 rounded-lg text-center" value={newIcon} onChange={e => setNewIcon(e.target.value)} placeholder="Emoji" />
-          <select className="flex-1 border p-2 rounded-lg" value={newCategory} onChange={e => setNewCategory(e.target.value as any)}>
-            <option value="learning">学习</option>
-            <option value="health">健康</option>
-            <option value="chores">家务</option>
-            <option value="other">其他</option>
+          <select className="flex-1 border p-2 rounded-lg" value={newCategory} onChange={e => setNewCategory(e.target.value)}>
+            {activeCategories.length === 0 && <option value="">暂无可用分类</option>}
+            {activeCategories.map(cat => (
+              <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
+            ))}
           </select>
         </div>
-        <button onClick={add} className="w-full bg-green-500 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2"><Plus size={16}/> 添加任务</button>
+        <button onClick={add} className="w-full bg-green-500 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2" disabled={activeCategories.length === 0}><Plus size={16}/> 添加任务</button>
       </div>
 
       <div className="space-y-2">
          {tasks.length === 0 && <p className="text-center text-gray-400 py-4">暂无任务</p>}
-         {tasks.map(task => (
-           <div key={task.id} className="bg-white p-3 rounded-xl flex items-center justify-between shadow-sm">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{task.icon}</span>
-                <div>
-                  <div className="font-bold">{task.title}</div>
-                  <div className="text-xs text-gray-500">+{task.points} | {task.category === 'learning' ? '学习' : task.category === 'health' ? '健康' : task.category === 'chores' ? '家务' : '其他'}</div>
+         {tasks.map(task => {
+           const cat = categories.find(c => c.id === task.category);
+           return (
+             <div key={task.id} className="bg-white p-3 rounded-xl flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{task.icon}</span>
+                  <div>
+                    <div className="font-bold">{task.title}</div>
+                    <div className="text-xs text-gray-500">+{task.points} | {cat?.icon} {cat?.name || task.category}</div>
+                  </div>
                 </div>
-              </div>
-              <button onClick={() => setTasks(tasks.filter(t => t.id !== task.id))} className="text-red-400 p-2"><Trash2 size={18} /></button>
-           </div>
-         ))}
+                <button onClick={() => setTasks(tasks.filter(t => t.id !== task.id))} className="text-red-400 p-2"><Trash2 size={18} /></button>
+             </div>
+           );
+         })}
       </div>
     </div>
   );
@@ -493,13 +515,15 @@ const RewardsManager = ({ rewards, setRewards }: { rewards: Reward[], setRewards
   );
 };
 
-const BadgesManager = ({ badges, setBadges }: { badges: Badge[], setBadges: (b: Badge[]) => void }) => {
+const BadgesManager = ({ badges, setBadges, categories }: { badges: Badge[], setBadges: (b: Badge[]) => void, categories: Category[] }) => {
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [icon, setIcon] = useState('🏅');
   const [type, setType] = useState<BadgeCriteriaType>('TOTAL_TASKS');
   const [threshold, setThreshold] = useState(10);
-  const [cat, setCat] = useState<TaskCategory>('learning');
+  const activeCategories = categories.filter(c => !c.isArchived);
+  const defaultCategory = activeCategories.length > 0 ? activeCategories[0].id : '';
+  const [cat, setCat] = useState<string>(defaultCategory);
 
   const add = () => {
     if (!title) return;
@@ -526,7 +550,7 @@ const BadgesManager = ({ badges, setBadges }: { badges: Badge[], setBadges: (b: 
         <h3 className="font-bold text-sm text-gray-500 uppercase">设计新勋章</h3>
         <input className="w-full border p-2 rounded-lg" placeholder="勋章名称" value={title} onChange={e => setTitle(e.target.value)} />
         <input className="w-full border p-2 rounded-lg" placeholder="描述 (例如: 完成100个任务)" value={desc} onChange={e => setDesc(e.target.value)} />
-        
+
         <div className="flex gap-2 items-center">
            <span className="text-sm font-bold w-12">条件:</span>
            <select className="flex-1 border p-2 rounded-lg text-sm" value={type} onChange={e => setType(e.target.value as any)}>
@@ -540,11 +564,11 @@ const BadgesManager = ({ badges, setBadges }: { badges: Badge[], setBadges: (b: 
         {type === 'CATEGORY_COUNT' && (
            <div className="flex gap-2 items-center">
              <span className="text-sm font-bold w-12">分类:</span>
-             <select className="flex-1 border p-2 rounded-lg" value={cat} onChange={e => setCat(e.target.value as any)}>
-               <option value="learning">学习</option>
-               <option value="health">健康</option>
-               <option value="chores">家务</option>
-               <option value="other">其他</option>
+             <select className="flex-1 border p-2 rounded-lg" value={cat} onChange={e => setCat(e.target.value)}>
+               {activeCategories.length === 0 && <option value="">暂无可用分类</option>}
+               {activeCategories.map(c => (
+                 <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+               ))}
              </select>
            </div>
         )}
@@ -572,6 +596,378 @@ const BadgesManager = ({ badges, setBadges }: { badges: Badge[], setBadges: (b: 
               <button onClick={() => setBadges(badges.filter(x => x.id !== b.id))} className="text-red-400 p-2"><Trash2 size={18} /></button>
            </div>
          ))}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * 分类管理组件
+ */
+const CategoriesManager = ({
+  categories,
+  setCategories,
+  tasks
+}: {
+  categories: Category[];
+  setCategories: (c: Category[]) => void;
+  tasks: Task[];
+}) => {
+  const [showForm, setShowForm] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+
+  // 计算每个分类的任务数量
+  const getCategoryTaskCount = (categoryId: string) => {
+    return tasks.filter(t => t.category === categoryId).length;
+  };
+
+  // 处理归档/取消归档
+  const handleToggleArchive = (category: Category) => {
+    if (category.isDefault) {
+      // 默认分类只能归档，不能删除
+      setCategories(
+        categories.map(c =>
+          c.id === category.id ? { ...c, isArchived: !c.isArchived } : c
+        )
+      );
+    } else {
+      // 自定义分类可以归档或删除
+      if (getCategoryTaskCount(category.id) > 0) {
+        alert('该分类下还有任务，请先移动或删除这些任务');
+        return;
+      }
+      setCategories(categories.filter(c => c.id !== category.id));
+    }
+  };
+
+  // 处理编辑
+  const handleEdit = (category: Category) => {
+    setEditingCategory(category);
+    setShowForm(true);
+  };
+
+  // 处理添加
+  const handleAdd = () => {
+    setEditingCategory(null);
+    setShowForm(true);
+  };
+
+  // 分离归档和未归档的分类
+  const activeCategories = categories.filter(c => !c.isArchived);
+  const archivedCategories = categories.filter(c => c.isArchived);
+
+  return (
+    <div className="space-y-6">
+      {/* 添加分类按钮 */}
+      <button
+        onClick={handleAdd}
+        className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+      >
+        <Plus size={20} />
+        添加新分类
+      </button>
+
+      {/* 未归档的分类 */}
+      <div className="space-y-3">
+        <h3 className="font-bold text-sm text-gray-500 uppercase px-1">使用中的分类</h3>
+        {activeCategories.length === 0 ? (
+          <div className="text-center py-6 text-gray-400 bg-white rounded-xl">
+            <p>还没有创建分类哦</p>
+          </div>
+        ) : (
+          activeCategories.map(category => (
+            <CategoryCard
+              key={category.id}
+              category={category}
+              taskCount={getCategoryTaskCount(category.id)}
+              onEdit={handleEdit}
+              onToggleArchive={handleToggleArchive}
+            />
+          ))
+        )}
+      </div>
+
+      {/* 已归档的分类 */}
+      {archivedCategories.length > 0 && (
+        <div className="space-y-3 pt-4 border-t border-gray-200">
+          <h3 className="font-bold text-sm text-gray-400 uppercase px-1 flex items-center gap-2">
+            <Archive size={14} />
+            已归档
+          </h3>
+          {archivedCategories.map(category => (
+            <CategoryCard
+              key={category.id}
+              category={category}
+              taskCount={getCategoryTaskCount(category.id)}
+              onEdit={handleEdit}
+              onToggleArchive={handleToggleArchive}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* 分类表单模态框 */}
+      {showForm && (
+        <CategoryFormModal
+          category={editingCategory}
+          categories={categories}
+          onSave={(savedCategory) => {
+            if (editingCategory) {
+              // 编辑模式
+              setCategories(
+                categories.map(c =>
+                  c.id === editingCategory.id ? savedCategory : c
+                )
+              );
+            } else {
+              // 新增模式
+              setCategories([...categories, savedCategory]);
+            }
+            setShowForm(false);
+            setEditingCategory(null);
+          }}
+          onClose={() => {
+            setShowForm(false);
+            setEditingCategory(null);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+/**
+ * 分类卡片组件
+ */
+const CategoryCard = ({
+  category,
+  taskCount,
+  onEdit,
+  onToggleArchive
+}: {
+  category: Category;
+  taskCount: number;
+  onEdit: (c: Category) => void;
+  onToggleArchive: (c: Category) => void;
+}) => {
+  const opacityClass = category.isArchived ? 'opacity-60' : '';
+  const archiveLabel = category.isArchived ? '已归档' : '归档';
+
+  return (
+    <div
+      className={`bg-white p-4 rounded-xl shadow-sm border-l-4 transition-all ${opacityClass}`}
+      style={{ borderLeftColor: category.color.includes('blue') ? '#4F46E5' :
+                           category.color.includes('green') ? '#10B981' :
+                           category.color.includes('purple') ? '#A855F7' :
+                           category.color.includes('yellow') ? '#FBBF24' :
+                           category.color.includes('pink') ? '#EC4899' :
+                           category.color.includes('red') ? '#EF4444' :
+                           category.color.includes('orange') ? '#F97316' :
+                           '#6B7280' }}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${category.color}`}
+          >
+            {category.icon}
+          </div>
+          <div>
+            <div className="font-bold text-gray-800 flex items-center gap-2">
+              {category.name}
+              {category.isDefault && (
+                <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">默认</span>
+              )}
+              {category.isArchived && (
+                <span className="text-xs bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full">归档</span>
+              )}
+            </div>
+            <div className="text-xs text-gray-400">
+              {taskCount} 个任务
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onEdit(category)}
+            className="text-gray-400 hover:text-blue-500 p-2 transition-colors"
+            title="编辑"
+          >
+            ✏️
+          </button>
+          <button
+            onClick={() => onToggleArchive(category)}
+            className={`p-2 transition-colors ${
+              category.isArchived
+                ? 'text-green-400 hover:text-green-600'
+                : 'text-gray-400 hover:text-orange-500'
+            }`}
+            title={category.isArchived ? '取消归档' : archiveLabel}
+          >
+            {category.isArchived ? <ArchiveRestore size={18} /> : <Archive size={18} />}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * 分类表单模态框组件
+ */
+const CategoryFormModal = ({
+  category,
+  categories,
+  onSave,
+  onClose
+}: {
+  category: Category | null;
+  categories: Category[];
+  onSave: (c: Category) => void;
+  onClose: () => void;
+}) => {
+  const [name, setName] = useState(category?.name || '');
+  const [selectedIconIndex, setSelectedIconIndex] = useState(0);
+  const [selectedColorIndex, setSelectedColorIndex] = useState(0);
+
+  // 初始化选中的图标和颜色
+  useEffect(() => {
+    if (category) {
+      const iconIndex = CATEGORY_ICONS.indexOf(category.icon);
+      if (iconIndex >= 0) setSelectedIconIndex(iconIndex);
+
+      // 从颜色类名中提取颜色索引
+      const colorMatch = category.color.match(/bg-(\w+)-100/);
+      if (colorMatch) {
+        const colorName = colorMatch[1];
+        const colorIndex = CATEGORY_COLORS.findIndex(
+          c => c.bg.includes(colorName)
+        );
+        if (colorIndex >= 0) setSelectedColorIndex(colorIndex);
+      }
+    }
+  }, [category]);
+
+  const selectedIcon = CATEGORY_ICONS[selectedIconIndex];
+  const selectedColor = CATEGORY_COLORS[selectedColorIndex];
+
+  const handleSave = () => {
+    if (!name.trim()) {
+      alert('请输入分类名称');
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const newCategory: Category = {
+      id: category?.id || `cat_${Date.now()}`,
+      name: name.trim(),
+      icon: selectedIcon,
+      color: `${selectedColor.bg} ${selectedColor.text}`,
+      isArchived: category?.isArchived || false,
+      isDefault: category?.isDefault || false,
+      createdAt: category?.createdAt || now
+    };
+
+    onSave(newCategory);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 shadow-2xl animate-fadeIn">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold text-gray-800">
+            {category ? '编辑分类' : '添加新分类'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 p-2"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        {/* 预览 */}
+        <div className="bg-gray-50 rounded-xl p-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div
+              className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${selectedColor.bg} ${selectedColor.text}`}
+            >
+              {selectedIcon}
+            </div>
+            <div>
+              <div className="font-bold text-gray-800">{name || '分类名称'}</div>
+              <div className="text-xs text-gray-400">预览效果</div>
+            </div>
+          </div>
+        </div>
+
+        {/* 分类名称 */}
+        <div className="space-y-2 mb-6">
+          <label className="text-sm font-bold text-gray-600">分类名称</label>
+          <input
+            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-kid-blue transition-colors"
+            placeholder="例如：阅读、运动、才艺"
+            value={name}
+            onChange={e => setName(e.target.value)}
+          />
+        </div>
+
+        {/* 图标选择 */}
+        <div className="space-y-2 mb-6">
+          <label className="text-sm font-bold text-gray-600">选择图标</label>
+          <div className="grid grid-cols-10 gap-2">
+            {CATEGORY_ICONS.map((icon, index) => (
+              <button
+                key={icon}
+                onClick={() => setSelectedIconIndex(index)}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all ${
+                  selectedIconIndex === index
+                    ? 'bg-kid-blue text-white scale-110'
+                    : 'bg-gray-100 hover:bg-gray-200'
+                }`}
+              >
+                {icon}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 颜色选择 */}
+        <div className="space-y-2 mb-6">
+          <label className="text-sm font-bold text-gray-600">选择颜色</label>
+          <div className="grid grid-cols-6 gap-2">
+            {CATEGORY_COLORS.map((color, index) => (
+              <button
+                key={color.name}
+                onClick={() => setSelectedColorIndex(index)}
+                className={`h-10 rounded-lg transition-all ${
+                  selectedColorIndex === index
+                    ? 'ring-2 ring-offset-2 ring-kid-blue scale-105'
+                    : ''
+                } ${color.bg} ${color.text}`}
+                title={color.name}
+              >
+                {color.name[0]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 操作按钮 */}
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+          >
+            取消
+          </button>
+          <button
+            onClick={handleSave}
+            className="flex-1 bg-kid-blue text-white py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-600 transition-colors"
+          >
+            {category ? '保存' : '创建'}
+          </button>
+        </div>
       </div>
     </div>
   );

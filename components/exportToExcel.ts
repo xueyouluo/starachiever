@@ -68,10 +68,19 @@ export const exportChildrenToExcel = (children: ChildProfile[]) => {
     sheetData.push(['获得积分总数', child.stats.totalPointsEarned]);
     sheetData.push(['兑换奖励次数', child.stats.totalRewardsRedeemed || child.redemptions?.length || 0]);
     sheetData.push(['累计消耗积分', child.redemptions?.reduce((sum, r) => sum + r.cost, 0) || 0]);
-    sheetData.push(['学习类任务', child.stats.categoryCounts.learning || 0]);
-    sheetData.push(['健康类任务', child.stats.categoryCounts.health || 0]);
-    sheetData.push(['家务类任务', child.stats.categoryCounts.chores || 0]);
-    sheetData.push(['其他类任务', child.stats.categoryCounts.other || 0]);
+
+    // 动态遍历分类统计
+    if (child.categories && child.categories.length > 0) {
+      child.categories.forEach(cat => {
+        sheetData.push([`${cat.icon} ${cat.name}`, child.stats.categoryCounts[cat.id] || 0]);
+      });
+    } else {
+      // 兼容旧数据（如果没有categories字段）
+      sheetData.push(['学习类任务', child.stats.categoryCounts.learning || 0]);
+      sheetData.push(['健康类任务', child.stats.categoryCounts.health || 0]);
+      sheetData.push(['家务类任务', child.stats.categoryCounts.chores || 0]);
+      sheetData.push(['其他类任务', child.stats.categoryCounts.other || 0]);
+    }
     sheetData.push([]);
 
     // 积分消耗记录
@@ -129,12 +138,21 @@ export const exportChildrenToExcel = (children: ChildProfile[]) => {
 
       sortedEntries.forEach(([date, dailyData]: [string, DailyTaskCompletion]) => {
         dailyData.tasks.forEach((task, index) => {
-          const categoryMap: Record<string, string> = {
-            'learning': '学习',
-            'health': '健康',
-            'chores': '家务',
-            'other': '其他'
-          };
+          // 动态获取分类名称
+          let categoryDisplayName = task.category;
+          if (child.categories && child.categories.length > 0) {
+            const cat = child.categories.find(c => c.id === task.category);
+            categoryDisplayName = cat ? `${cat.icon} ${cat.name}` : task.category;
+          } else {
+            // 兼容旧数据
+            const categoryMap: Record<string, string> = {
+              'learning': '学习',
+              'health': '健康',
+              'chores': '家务',
+              'other': '其他'
+            };
+            categoryDisplayName = categoryMap[task.category] || task.category;
+          }
 
           // 格式化完成时间
           const completedTime = new Date(task.completedTime);
@@ -146,7 +164,7 @@ export const exportChildrenToExcel = (children: ChildProfile[]) => {
             task.title,
             task.icon,
             task.points,
-            categoryMap[task.category] || task.category,
+            categoryDisplayName,
             timeStr
           ]);
         });

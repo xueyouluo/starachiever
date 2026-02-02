@@ -1,4 +1,14 @@
-export type TaskCategory = 'learning' | 'health' | 'chores' | 'other';
+export type TaskCategory = string;
+
+export interface Category {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  isArchived: boolean;
+  isDefault: boolean;
+  createdAt: string;
+}
 
 export interface Task {
   id: string;
@@ -39,7 +49,7 @@ export interface Badge {
 export interface UserStats {
   totalTasksCompleted: number;
   totalPointsEarned: number; // Cumulative all-time points
-  categoryCounts: Record<TaskCategory, number>;
+  categoryCounts: Record<string, number>;
 }
 
 // 每日任务完成明细
@@ -85,6 +95,7 @@ export interface ChildProfile {
   themeColor: string; // e.g., 'blue', 'pink', 'green'
 
   // Data specific to this child
+  categories: Category[]; // 自定义分类列表
   tasks: Task[];
   rewards: Reward[];
   badges: Badge[];

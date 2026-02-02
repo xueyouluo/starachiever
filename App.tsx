@@ -6,12 +6,14 @@ import ProfileTab from './components/ProfileTab';
 import CalendarTab from './components/CalendarTab';
 import ParentMode from './components/ParentMode';
 import { ConfirmModal, AlertModal } from './components/Modal';
-import { Task, Reward, Tab, AppData, Badge, BadgeCriteria, ChildProfile, UserState, TaskCategory } from './types';
-import { createDefaultChild, INITIAL_STATS } from './constants';
+import { Task, Reward, Tab, AppData, Badge, BadgeCriteria, ChildProfile, UserState, TaskCategory, Category } from './types';
+import { createDefaultChild, INITIAL_STATS, ensureCategoryCounts } from './constants';
+import { DEFAULT_CATEGORIES } from './constants/categories';
 import { PlusCircle, User, LogOut, X } from 'lucide-react';
 
-const STORAGE_KEY = 'starachiever_data_v4'; 
-const NEW_STORAGE_KEY = 'starachiever_data_v5'; // Bump version for multi-user support
+const STORAGE_KEY = 'starachiever_data_v4';
+const STORAGE_KEY_V5 = 'starachiever_data_v5';
+const STORAGE_KEY_V6 = 'starachiever_data_v6'; // Version for custom categories
 
 const App: React.FC = () => {
   const [childrenList, setChildrenList] = useState<ChildProfile[]>([]);
@@ -47,15 +49,15 @@ const App: React.FC = () => {
 
   // Load data from local storage with Migration Logic
   useEffect(() => {
-    // Check new storage first
-    const savedDataV5 = localStorage.getItem(NEW_STORAGE_KEY);
-    
-    if (savedDataV5) {
+    // Check v6 storage first
+    const savedDataV6 = localStorage.getItem(STORAGE_KEY_V6);
+
+    if (savedDataV6) {
       try {
-        const parsed: AppData = JSON.parse(savedDataV5);
+        const parsed: AppData = JSON.parse(savedDataV6);
         // Ensure date consistency for each child
         const today = new Date().toISOString().split('T')[0];
-        
+
         const updatedChildren = parsed.children.map(child => {
            // 确保 dailyHistory 字段存在（兼容旧数据）
            if (!child.dailyHistory) {
@@ -65,6 +67,11 @@ const App: React.FC = () => {
            // 确保 redemptions 字段存在（兼容旧数据）
            if (!child.redemptions) {
                child.redemptions = [];
+           }
+
+           // 确保 categories 字段存在（v6兼容）
+           if (!child.categories || child.categories.length === 0) {
+               child.categories = [...DEFAULT_CATEGORIES];
            }
 
            // Reset daily tasks logic
@@ -91,61 +98,104 @@ const App: React.FC = () => {
            }
            return child;
         });
-        
+
         setChildrenList(updatedChildren);
         setActiveChildId(parsed.activeChildId);
         setParentPassword(parsed.parentPassword);
       } catch (e) {
-        console.error("Failed to load v5 data", e);
+        console.error("Failed to load v6 data", e);
       }
     } else {
-      // Fallback: Check for V4 data to migrate
-      const savedDataV4 = localStorage.getItem(STORAGE_KEY);
-      if (savedDataV4) {
-          try {
-             // Migration from V4 (single user) to V5 (multi user)
-             const oldData = JSON.parse(savedDataV4);
-             
-             // Create a child profile from old data
-             const migratedChild: ChildProfile = {
-                 id: 'default_migrated_child',
-                 name: oldData.user.name || '宝贝',
-                 avatar: '👶',
-                 themeColor: 'kid-blue',
-                 tasks: oldData.tasks || [],
-                 rewards: oldData.rewards || [],
-                 badges: oldData.badges || [],
-                 history: oldData.history || {},
-                 dailyHistory: {}, // 旧数据没有详细记录，从现在开始记录
-                 redemptions: [], // 旧数据没有兑换记录，从现在开始记录
-                 totalPoints: oldData.user.totalPoints || 0,
-                 currentStreak: oldData.user.currentStreak || 0,
-                 lastLoginDate: oldData.user.lastLoginDate || new Date().toISOString().split('T')[0],
-                 unlockedBadges: oldData.user.unlockedBadges || [],
-                 stats: oldData.user.stats || INITIAL_STATS
-             };
-             
-             setChildrenList([migratedChild]);
-             setActiveChildId(migratedChild.id);
-             // No password in old version, leave as undefined
-          } catch(e) {
-              console.error("Migration failed", e);
-          }
-      }
+      // Try v5 migration
+      migrateV5ToV6();
     }
     setIsLoaded(true);
   }, []);
 
+  /**
+   * 从 v5 迁移到 v6（添加自定义分类功能）
+   */
+  const migrateV5ToV6 = () => {
+    const savedDataV5 = localStorage.getItem(STORAGE_KEY_V5);
+
+    if (savedDataV5) {
+        try {
+           const parsed: AppData = JSON.parse(savedDataV5);
+
+           // 为每个孩子添加默认分类
+           const updatedChildren = parsed.children.map(child => {
+               const childWithCategories: ChildProfile = {
+                   ...child,
+                   categories: [...DEFAULT_CATEGORIES],
+                   // 确保 stats.categoryCounts 包含所有默认分类
+                   stats: ensureCategoryCounts(child.stats, DEFAULT_CATEGORIES)
+               };
+               return childWithCategories;
+           });
+
+           setChildrenList(updatedChildren);
+           setActiveChildId(parsed.activeChildId);
+           setParentPassword(parsed.parentPassword);
+        } catch(e) {
+            console.error("V5 migration failed", e);
+            // Fallback to v4 migration
+            migrateV4ToV5();
+        }
+    } else {
+        // Fallback to v4 migration
+        migrateV4ToV5();
+    }
+  };
+
+  /**
+   * 从 v4 迁移到 v5/v6（单用户到多用户）
+   */
+  const migrateV4ToV5 = () => {
+    const savedDataV4 = localStorage.getItem(STORAGE_KEY);
+    if (savedDataV4) {
+      try {
+         // Migration from V4 (single user) to V6 (multi user with categories)
+         const oldData: any = JSON.parse(savedDataV4);
+
+         // Create a child profile from old data
+         const migratedChild: ChildProfile = {
+             id: 'default_migrated_child',
+             name: oldData.user?.name || '宝贝',
+             avatar: '👶',
+             themeColor: 'kid-blue',
+             categories: [...DEFAULT_CATEGORIES], // 添加默认分类
+             tasks: oldData.tasks || [],
+             rewards: oldData.rewards || [],
+             badges: oldData.badges || [],
+             history: oldData.history || {},
+             dailyHistory: {},
+             redemptions: [],
+             totalPoints: oldData.user?.totalPoints || 0,
+             currentStreak: oldData.user?.currentStreak || 0,
+             lastLoginDate: oldData.user?.lastLoginDate || new Date().toISOString().split('T')[0],
+             unlockedBadges: oldData.user?.unlockedBadges || [],
+             stats: ensureCategoryCounts(oldData.user?.stats || INITIAL_STATS, DEFAULT_CATEGORIES)
+         };
+
+         setChildrenList([migratedChild]);
+         setActiveChildId(migratedChild.id);
+         // No password in old version, leave as undefined
+      } catch(e) {
+          console.error("Migration failed", e);
+      }
+    }
+  };
+
   // Save data
   useEffect(() => {
     if (!isLoaded) return;
-    
+
     const data: AppData = {
       children: childrenList,
       activeChildId,
       parentPassword
     };
-    localStorage.setItem(NEW_STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(STORAGE_KEY_V6, JSON.stringify(data));
   }, [childrenList, activeChildId, parentPassword, isLoaded]);
 
   // Derived state for current child
@@ -155,6 +205,31 @@ const App: React.FC = () => {
   const updateCurrentChild = (updater: (c: ChildProfile) => ChildProfile) => {
       if (!currentChild) return;
       setChildrenList(prev => prev.map(c => c.id === currentChild.id ? updater(c) : c));
+  };
+
+  /**
+   * 获取分类信息（动态）
+   * @param categories 分类列表
+   * @param categoryId 分类ID
+   * @returns 分类信息，如果找不到返回默认值
+   */
+  const getCategoryInfo = (categories: Category[], categoryId: string) => {
+    const category = categories.find(c => c.id === categoryId);
+    if (category) {
+      return {
+        id: category.id,
+        name: category.name,
+        icon: category.icon,
+        color: category.color
+      };
+    }
+    // 默认值（用于兼容旧数据）
+    return {
+      id: categoryId,
+      name: categoryId,
+      icon: '⭐',
+      color: 'bg-gray-100 text-gray-700'
+    };
   };
 
   // Badge Logic
@@ -393,23 +468,23 @@ const App: React.FC = () => {
         const completedTasks = currentChild.tasks.filter(t => t.completed).length;
         const todayPoints = currentChild.tasks.filter(t => t.completed).reduce((sum, t) => sum + t.points, 0);
 
-        // 按分类组织任务
-        const tasksByCategory = currentChild.tasks.reduce((acc, task) => {
-          if (!acc[task.category]) {
-            acc[task.category] = [];
-          }
-          acc[task.category].push(task);
-          return acc;
-        }, {} as Record<TaskCategory, Task[]>);
+        // 过滤出未归档的分类ID
+        const activeCategoryIds = (currentChild.categories || [])
+          .filter(c => !c.isArchived)
+          .map(c => c.id);
 
-        const categoryInfo: Record<TaskCategory, { name: string; icon: string; color: string }> = {
-          learning: { name: '学习', icon: '📚', color: 'bg-blue-100 text-blue-700' },
-          health: { name: '健康', icon: '💪', color: 'bg-green-100 text-green-700' },
-          chores: { name: '家务', icon: '🧹', color: 'bg-purple-100 text-purple-700' },
-          other: { name: '其他', icon: '⭐', color: 'bg-yellow-100 text-yellow-700' }
-        };
+        // 按分类组织任务（仅包含未归档分类的任务）
+        const tasksByCategory = currentChild.tasks
+          .filter(task => activeCategoryIds.includes(task.category))
+          .reduce((acc, task) => {
+            if (!acc[task.category]) {
+              acc[task.category] = [];
+            }
+            acc[task.category].push(task);
+            return acc;
+          }, {} as Record<string, Task[]>);
 
-        const toggleCategory = (category: TaskCategory) => {
+        const toggleCategory = (category: string) => {
           setCollapsedCategories(prev => {
             const newSet = new Set(prev);
             if (newSet.has(category)) {
@@ -474,16 +549,17 @@ const App: React.FC = () => {
                </div>
             ) : (
               <>
-                {Object.entries(tasksByCategory).map(([category, tasks]) => {
-                  const isCollapsed = collapsedCategories.has(category as TaskCategory);
+                {Object.entries(tasksByCategory).map(([categoryId, tasks]) => {
+                  const isCollapsed = collapsedCategories.has(categoryId);
+                  const catInfo = getCategoryInfo(currentChild.categories || [], categoryId);
                   return (
-                    <div key={category} className="mb-4">
+                    <div key={categoryId} className="mb-4">
                       <button
-                        onClick={() => toggleCategory(category as TaskCategory)}
-                        className={`w-full flex items-center gap-2 mb-2 px-3 ${categoryInfo[category as TaskCategory].color} rounded-lg py-2.5 transition-all hover:opacity-90 active:scale-[0.98]`}
+                        onClick={() => toggleCategory(categoryId)}
+                        className={`w-full flex items-center gap-2 mb-2 px-3 ${catInfo.color} rounded-lg py-2.5 transition-all hover:opacity-90 active:scale-[0.98]`}
                       >
-                        <span className="text-xl">{categoryInfo[category as TaskCategory].icon}</span>
-                        <h4 className="font-bold flex-1 text-left">{categoryInfo[category as TaskCategory].name}</h4>
+                        <span className="text-xl">{catInfo.icon}</span>
+                        <h4 className="font-bold flex-1 text-left">{catInfo.name}</h4>
                         <span className="text-xs opacity-70">{tasks.filter(t => t.completed).length}/{tasks.length}</span>
                         <span className={`transition-transform duration-300 ${isCollapsed ? 'rotate-[-90deg]' : ''}`}>
                           ▼
@@ -500,7 +576,7 @@ const App: React.FC = () => {
                   );
                 })}
 
-                {currentChild.tasks.every(t => t.completed) && (
+                {currentChild.tasks.filter(t => activeCategoryIds.includes(t.category)).every(t => t.completed) && (
                    <div className="text-center py-10 opacity-60">
                       <p className="text-4xl mb-2">🎉</p>
                       <p className="text-gray-500 font-bold">任务全部完成啦！太棒了！</p>

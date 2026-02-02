@@ -1,4 +1,5 @@
-import { Task, Reward, Badge, ChildProfile, UserStats } from './types';
+import { Task, Reward, Badge, ChildProfile, UserStats, Category } from './types';
+import { DEFAULT_CATEGORIES } from './constants/categories';
 
 export const INITIAL_TASKS: Task[] = [
   { id: '1', title: '早起刷牙洗脸', icon: '🪥', points: 5, completed: false, color: 'bg-blue-100 text-blue-600', category: 'health' },
@@ -69,28 +70,51 @@ export const INITIAL_BADGES: Badge[] = [
 export const INITIAL_STATS: UserStats = {
   totalTasksCompleted: 0,
   totalPointsEarned: 0,
-  categoryCounts: {
-    learning: 0,
-    health: 0,
-    chores: 0,
-    other: 0
-  }
+  categoryCounts: {}  // 动态分类计数，初始为空
 };
 
-export const createDefaultChild = (name: string, avatar: string = '👶'): ChildProfile => ({
-  id: Date.now().toString() + Math.random().toString().slice(2, 6),
-  name,
-  avatar,
-  themeColor: 'kid-blue',
-  tasks: [...INITIAL_TASKS],
-  rewards: [...INITIAL_REWARDS],
-  badges: [...INITIAL_BADGES],
-  history: {},
-  dailyHistory: {},
-  redemptions: [],
-  totalPoints: 0,
-  currentStreak: 0,
-  lastLoginDate: new Date().toISOString().split('T')[0],
-  unlockedBadges: [],
-  stats: { ...INITIAL_STATS }
-});
+/**
+ * 确保统计对象包含所有分类的计数
+ * @param stats 当前统计对象
+ * @param categories 分类列表
+ * @returns 更新后的统计对象
+ */
+export const ensureCategoryCounts = (stats: UserStats, categories: Category[]): UserStats => {
+  const updatedCategoryCounts = { ...stats.categoryCounts };
+
+  // 确保所有分类都有计数
+  categories.forEach(cat => {
+    if (!(cat.id in updatedCategoryCounts)) {
+      updatedCategoryCounts[cat.id] = 0;
+    }
+  });
+
+  return {
+    ...stats,
+    categoryCounts: updatedCategoryCounts
+  };
+};
+
+export const createDefaultChild = (name: string, avatar: string = '👶'): ChildProfile => {
+  const defaultCategories = [...DEFAULT_CATEGORIES];
+  const initialStatsWithCategories = ensureCategoryCounts(INITIAL_STATS, defaultCategories);
+
+  return {
+    id: Date.now().toString() + Math.random().toString().slice(2, 6),
+    name,
+    avatar,
+    themeColor: 'kid-blue',
+    categories: defaultCategories,
+    tasks: [...INITIAL_TASKS],
+    rewards: [...INITIAL_REWARDS],
+    badges: [...INITIAL_BADGES],
+    history: {},
+    dailyHistory: {},
+    redemptions: [],
+    totalPoints: 0,
+    currentStreak: 0,
+    lastLoginDate: new Date().toISOString().split('T')[0],
+    unlockedBadges: [],
+    stats: initialStatsWithCategories
+  };
+};
