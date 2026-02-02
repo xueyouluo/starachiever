@@ -232,6 +232,25 @@ const App: React.FC = () => {
     };
   };
 
+  /**
+   * 根据时间获取问候语
+   */
+  const getGreeting = (): { greeting: string; emoji: string; message: string } => {
+    const hour = new Date().getHours();
+
+    if (hour >= 5 && hour < 12) {
+      return { greeting: '早安', emoji: '🌅', message: '今天也要元气满满哦！' };
+    } else if (hour >= 12 && hour < 14) {
+      return { greeting: '午安', emoji: '☀️', message: '下午也要继续加油哦！' };
+    } else if (hour >= 14 && hour < 18) {
+      return { greeting: '下午好', emoji: '🌤', message: '继续保持好状态！' };
+    } else if (hour >= 18 && hour < 22) {
+      return { greeting: '晚上好', emoji: '🌙', message: '今天辛苦啦！' };
+    } else {
+      return { greeting: '夜深了', emoji: '🌃', message: '早点休息，明天见！' };
+    }
+  };
+
   // Badge Logic
   const checkCriteria = (criteria: BadgeCriteria, stats: any, streak: number): boolean => {
     switch (criteria.type) {
@@ -468,6 +487,9 @@ const App: React.FC = () => {
         const completedTasks = currentChild.tasks.filter(t => t.completed).length;
         const todayPoints = currentChild.tasks.filter(t => t.completed).reduce((sum, t) => sum + t.points, 0);
 
+        // 获取时间相关的问候语
+        const greetingInfo = getGreeting();
+
         // 过滤出未归档的分类ID
         const activeCategoryIds = (currentChild.categories || [])
           .filter(c => !c.isArchived)
@@ -512,12 +534,12 @@ const App: React.FC = () => {
                             {currentChild.avatar}
                         </button>
                         <div>
-                            <h2 className="text-xl font-black mb-1">早安, {currentChild.name}!</h2>
-                            <p className="opacity-90 text-xs font-bold">今天也要元气满满哦！</p>
+                            <h2 className="text-xl font-black mb-1">{greetingInfo.greeting}, {currentChild.name}!</h2>
+                            <p className="opacity-90 text-xs font-bold">{greetingInfo.message}</p>
                         </div>
                      </div>
                      <div className="bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm flex items-center gap-1">
-                        <span className="text-orange-300">🔥</span>
+                        <span className="text-orange-300">{greetingInfo.emoji}</span>
                         <span className="font-black text-sm">{currentChild.currentStreak}天</span>
                      </div>
                   </div>
