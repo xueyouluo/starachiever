@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Task, Reward, Badge, TaskCategory, BadgeCriteriaType, ChildProfile } from '../types';
-import { X, Trash2, Plus, Users, UserPlus, Lock, KeyRound, Download } from 'lucide-react';
+import { X, Trash2, Plus, Users, UserPlus, Lock, KeyRound, Download, FileJson } from 'lucide-react';
 import { createDefaultChild } from '../constants';
-import { exportChildrenToExcel } from './exportToExcel';
+import { exportChildrenToExcel, exportDataToJSON } from './exportToExcel';
 import { AlertModal } from './Modal';
 
 interface ParentModeProps {
@@ -232,6 +232,7 @@ const ParentMode: React.FC<ParentModeProps> = ({
                         setChildrenList={setChildrenList}
                         activeChildId={activeChildId}
                         setActiveChildId={setActiveChildId}
+                        savedPassword={savedPassword}
                     />
                 )}
                 {activeTab === 'tasks' && childrenList.length > 0 && (
@@ -276,7 +277,7 @@ const ParentMode: React.FC<ParentModeProps> = ({
 
 // --- Sub-components ---
 
-const ChildrenManager = ({ childrenList, setChildrenList, activeChildId, setActiveChildId }: any) => {
+const ChildrenManager = ({ childrenList, setChildrenList, activeChildId, setActiveChildId, savedPassword }: any) => {
     const [newName, setNewName] = useState('');
     const [newAvatar, setNewAvatar] = useState('👶');
 
@@ -306,16 +307,28 @@ const ChildrenManager = ({ childrenList, setChildrenList, activeChildId, setActi
 
     return (
         <div className="space-y-6">
-            {/* 导出按钮 */}
-            <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-4 rounded-xl shadow-md">
-                <button
-                    onClick={() => exportChildrenToExcel(childrenList)}
-                    className="w-full bg-white text-blue-600 py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-blue-50 transition-colors shadow-md"
-                >
-                    <Download size={18} />
-                    导出所有数据到Excel 📊
-                </button>
-                <p className="text-white/80 text-xs mt-2 text-center">将所有小朋友的数据导出为Excel文件，方便保存和分析</p>
+            {/* 导出按钮组 */}
+            <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-4 rounded-xl shadow-md">
+                    <button
+                        onClick={() => exportChildrenToExcel(childrenList)}
+                        className="w-full bg-white text-blue-600 py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-blue-50 transition-colors shadow-md"
+                    >
+                        <Download size={18} />
+                        导出Excel
+                    </button>
+                    <p className="text-white/80 text-xs mt-2 text-center">每日打卡明细</p>
+                </div>
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-4 rounded-xl shadow-md">
+                    <button
+                        onClick={() => exportDataToJSON(childrenList, activeChildId, savedPassword)}
+                        className="w-full bg-white text-emerald-600 py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors shadow-md"
+                    >
+                        <FileJson size={18} />
+                        导出JSON
+                    </button>
+                    <p className="text-white/80 text-xs mt-2 text-center">完整数据备份</p>
+                </div>
             </div>
 
             <div className="bg-white p-4 rounded-xl shadow-sm space-y-3">

@@ -1,5 +1,41 @@
 import * as XLSX from 'xlsx';
-import { ChildProfile, DailyTaskCompletion } from '../types';
+import { ChildProfile, DailyTaskCompletion, AppData } from '../types';
+
+/**
+ * 导出所有数据为JSON文件（用于备份）
+ */
+export const exportDataToJSON = (children: ChildProfile[], activeChildId: string | null, parentPassword?: string) => {
+  if (children.length === 0) {
+    alert('没有数据可以导出哦！');
+    return;
+  }
+
+  // 创建完整的数据对象
+  const data: AppData = {
+    children: children,
+    activeChildId: activeChildId,
+    parentPassword: parentPassword
+  };
+
+  // 转换为JSON字符串，格式化输出
+  const jsonString = JSON.stringify(data, null, 2);
+
+  // 创建Blob并下载
+  const blob = new Blob([jsonString], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+  const timeStr = `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+  const fileName = `starachiever_backup_${dateStr}_${timeStr}.json`;
+
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
 
 /**
  * 导出所有小朋友的每日打卡明细到Excel文件
