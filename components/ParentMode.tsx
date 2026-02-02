@@ -405,6 +405,9 @@ const TasksManager = ({ tasks, setTasks, categories }: { tasks: Task[], setTasks
   const defaultCategory = activeCategories.length > 0 ? activeCategories[0].id : '';
   const [newCategory, setNewCategory] = useState<string>(defaultCategory);
 
+  // 编辑状态
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+
   const add = () => {
     if (!newTitle) return;
     const newTask: Task = {
@@ -420,6 +423,37 @@ const TasksManager = ({ tasks, setTasks, categories }: { tasks: Task[], setTasks
     setNewTitle('');
   };
 
+  const updateTask = () => {
+    if (!newTitle || !editingTaskId) return;
+    const updatedTasks = tasks.map(task =>
+      task.id === editingTaskId
+        ? { ...task, title: newTitle, points: Number(newPoints), icon: newIcon, category: newCategory }
+        : task
+    );
+    setTasks(updatedTasks);
+    setEditingTaskId(null);
+    setNewTitle('');
+    setNewIcon('🌟');
+    setNewPoints(5);
+    setNewCategory(defaultCategory);
+  };
+
+  const startEdit = (task: Task) => {
+    setEditingTaskId(task.id);
+    setNewTitle(task.title);
+    setNewPoints(task.points);
+    setNewIcon(task.icon);
+    setNewCategory(task.category);
+  };
+
+  const cancelEdit = () => {
+    setEditingTaskId(null);
+    setNewTitle('');
+    setNewIcon('🌟');
+    setNewPoints(5);
+    setNewCategory(defaultCategory);
+  };
+
   // 获取分类名称的辅助函数
   const getCategoryName = (categoryId: string) => {
     const cat = categories.find(c => c.id === categoryId);
@@ -429,19 +463,63 @@ const TasksManager = ({ tasks, setTasks, categories }: { tasks: Task[], setTasks
   return (
     <div className="space-y-6">
       <div className="bg-white p-4 rounded-xl shadow-sm space-y-3">
-        <h3 className="font-bold text-sm text-gray-500 uppercase">添加新任务</h3>
-        <input className="w-full border p-2 rounded-lg" placeholder="任务名称" value={newTitle} onChange={e => setNewTitle(e.target.value)} />
+        <h3 className="font-bold text-sm text-gray-500 uppercase">
+          {editingTaskId ? '编辑任务' : '添加新任务'}
+        </h3>
+        <input
+          className="w-full border p-2 rounded-lg"
+          placeholder="任务名称"
+          value={newTitle}
+          onChange={e => setNewTitle(e.target.value)}
+        />
         <div className="flex gap-2">
-          <input className="w-20 border p-2 rounded-lg text-center" type="number" value={newPoints} onChange={e => setNewPoints(Number(e.target.value))} />
-          <input className="w-16 border p-2 rounded-lg text-center" value={newIcon} onChange={e => setNewIcon(e.target.value)} placeholder="Emoji" />
-          <select className="flex-1 border p-2 rounded-lg" value={newCategory} onChange={e => setNewCategory(e.target.value)}>
+          <input
+            className="w-20 border p-2 rounded-lg text-center"
+            type="number"
+            value={newPoints}
+            onChange={e => setNewPoints(Number(e.target.value))}
+          />
+          <input
+            className="w-16 border p-2 rounded-lg text-center"
+            value={newIcon}
+            onChange={e => setNewIcon(e.target.value)}
+            placeholder="Emoji"
+          />
+          <select
+            className="flex-1 border p-2 rounded-lg"
+            value={newCategory}
+            onChange={e => setNewCategory(e.target.value)}
+          >
             {activeCategories.length === 0 && <option value="">暂无可用分类</option>}
             {activeCategories.map(cat => (
               <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
             ))}
           </select>
         </div>
-        <button onClick={add} className="w-full bg-green-500 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2" disabled={activeCategories.length === 0}><Plus size={16}/> 添加任务</button>
+        {editingTaskId ? (
+          <div className="flex gap-2">
+            <button
+              onClick={updateTask}
+              className="flex-1 bg-blue-500 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-blue-600"
+            >
+              保存修改
+            </button>
+            <button
+              onClick={cancelEdit}
+              className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-gray-400"
+            >
+              取消
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={add}
+            className="w-full bg-green-500 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2"
+            disabled={activeCategories.length === 0}
+          >
+            <Plus size={16}/> 添加任务
+          </button>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -457,7 +535,21 @@ const TasksManager = ({ tasks, setTasks, categories }: { tasks: Task[], setTasks
                     <div className="text-xs text-gray-500">+{task.points} | {cat?.icon} {cat?.name || task.category}</div>
                   </div>
                 </div>
-                <button onClick={() => setTasks(tasks.filter(t => t.id !== task.id))} className="text-red-400 p-2"><Trash2 size={18} /></button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => startEdit(task)}
+                    className="text-blue-400 p-2 hover:text-blue-600"
+                    title="编辑"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    onClick={() => setTasks(tasks.filter(t => t.id !== task.id))}
+                    className="text-red-400 p-2 hover:text-red-600"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
              </div>
            );
          })}
