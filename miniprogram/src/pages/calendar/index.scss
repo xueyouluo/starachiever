@@ -1,0 +1,266 @@
+.calendar-page {
+  min-height: 100vh;
+  background: #F5F5F5;
+}
+
+.content-wrapper {
+  padding: 20px;
+}
+
+.month-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0 10px;
+}
+
+.nav-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 8px;
+  font-size: 20px;
+  color: #667eea;
+}
+
+.month-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2D3436;
+}
+
+.stats-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.stats-title {
+  font-size: 14px;
+  color: #636E72;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.stats-content {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.stats-count {
+  font-size: 48px;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.stats-divider {
+  display: none;
+}
+
+.stats-total {
+  display: none;
+}
+
+.stats-unit {
+  font-size: 20px;
+  color: #636E72;
+  margin-left: 8px;
+}
+
+.stats-hint {
+  font-size: 14px;
+  color: #636E72;
+  margin-top: 8px;
+  display: block;
+}
+
+.calendar-container {
+  background: #F8F9FA;
+  border: 2px solid #F0F0F0;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.week-header {
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.week-day {
+  flex: 1;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.week-day text {
+  font-size: 12px;
+  color: #636E72;
+  font-weight: 600;
+}
+
+.calendar-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.calendar-day {
+  width: 14.28%;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  border: 2px solid transparent;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.calendar-day.empty {
+  background: transparent;
+}
+
+.calendar-day.normal {
+  background: #DBEAFE;
+  color: #2563EB;
+  border-color: #BFDBFE;
+}
+
+.calendar-day.good {
+  background: #FEF08A;
+  color: #A16207;
+  border-color: #FDE047;
+}
+
+.calendar-day.excellent {
+  background: #FACC15;
+  color: #854D0E;
+  border-color: #EAB308;
+}
+
+.calendar-day.today {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.calendar-day.today .day-number {
+  font-weight: bold;
+}
+
+.day-number {
+  font-size: 16px;
+  color: #2D3436;
+  line-height: 1;
+}
+
+.calendar-day.normal .day-number,
+.calendar-day.good .day-number,
+.calendar-day.excellent .day-number {
+  color: inherit;
+}
+
+.day-indicator {
+  position: absolute;
+  bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.star {
+  font-size: 14px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background: currentColor;
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+.streak-card {
+  margin-top: 20px;
+  background: linear-gradient(135deg, #FFEAA7, #FD79A8);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.streak-icon {
+  font-size: 24px;
+}
+
+.streak-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2D3436;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.legend-dot.normal {
+  background: #DBEAFE;
+  color: #2563EB;
+  border: 1px solid #BFDBFE;
+}
+
+.legend-dot.good {
+  background: #FEF08A;
+  color: #A16207;
+  border: 1px solid #FDE047;
+}
+
+.legend-dot.excellent {
+  background: #FACC15;
+  color: #854D0E;
+  border: 1px solid #EAB308;
+}
+
+.legend-text {
+  font-size: 14px;
+  color: #636E72;
+  font-weight: 500;
+}

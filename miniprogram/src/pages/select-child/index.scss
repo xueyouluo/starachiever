@@ -1,0 +1,87 @@
+.select-child-page {
+  min-height: 100vh;
+  background: #F5F5F5;
+}
+
+.page-header {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  padding: 40px 20px 20px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+}
+
+.children-list {
+  padding: 20px;
+}
+
+.child-item {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border-left: 4px solid;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.child-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  margin-right: 16px;
+}
+
+.child-info {
+  flex: 1;
+}
+
+.child-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2D3436;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.child-points {
+  font-size: 14px;
+  color: #636E72;
+}
+
+.child-arrow {
+  font-size: 20px;
+  color: #636E72;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+}
+
+.empty-icon {
+  font-size: 60px;
+  margin-bottom: 16px;
+}
+
+.empty-text {
+  font-size: 18px;
+  color: #2D3436;
+  margin-bottom: 8px;
+}
+
+.empty-hint {
+  font-size: 14px;
+  color: #636E72;
+}

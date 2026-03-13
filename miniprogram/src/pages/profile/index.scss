@@ -1,0 +1,168 @@
+.profile-page {
+  min-height: 100vh;
+  background: #F5F5F5;
+}
+
+.profile-header {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+}
+
+.avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.avatar-text {
+  font-size: 40px;
+}
+
+.name {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.switch-btn {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.stats-container {
+  display: flex;
+  background: white;
+  margin: -20px 20px 20px;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: bold;
+  color: #667eea;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #636E72;
+}
+
+.stat-divider {
+  width: 1px;
+  background: #F0F0F0;
+  margin: 0 16px;
+}
+
+.badges-section {
+  background: white;
+  margin: 0 20px 20px;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2D3436;
+}
+
+.section-count {
+  font-size: 14px;
+  color: #636E72;
+}
+
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.badge-item {
+  border: 2px solid;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: #F8F9FA;
+}
+
+.badge-item.locked {
+  opacity: 0.5;
+  border-color: #DFE6E9;
+}
+
+.badge-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.badge-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2D3436;
+}
+
+.badge-desc {
+  font-size: 10px;
+  color: #636E72;
+  margin-top: 4px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #636E72;
+}
+
+.parent-mode-btn {
+  margin: 0 20px 40px;
+  background: linear-gradient(135deg, #FFEAA7, #FD79A8);
+  border-radius: 16px;
+  padding: 16px;
+  text-align: center;
+}
+
+.parent-mode-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2D3436;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
