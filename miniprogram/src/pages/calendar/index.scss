@@ -1,6 +1,42 @@
 .calendar-page {
   min-height: 100vh;
-  background: #F5F5F5;
+  background: #FFF5F0;
+}
+
+/* 渐变头部 */
+.cal-header {
+  background: linear-gradient(135deg, #4BCFFA 0%, #26DE81 100%);
+  padding: 40px 20px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.cal-header::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 100px;
+  height: 100px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+}
+
+.cal-header-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.cal-header-sub {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  display: block;
 }
 
 .content-wrapper {
@@ -22,9 +58,10 @@
   align-items: center;
   justify-content: center;
   background: white;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 20px;
-  color: #667eea;
+  color: #FF6348;
+  box-shadow: 0 2px 8px rgba(255, 99, 72, 0.12);
 }
 
 .month-title {
@@ -35,10 +72,11 @@
 
 .stats-card {
   background: white;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(75, 207, 250, 0.12);
+  border-left: 4px solid #4BCFFA;
 }
 
 .stats-title {
@@ -57,7 +95,7 @@
 .stats-count {
   font-size: 48px;
   font-weight: bold;
-  color: #667eea;
+  color: #4BCFFA;
 }
 
 .stats-divider {
@@ -82,11 +120,11 @@
 }
 
 .calendar-container {
-  background: #F8F9FA;
-  border: 2px solid #F0F0F0;
-  border-radius: 16px;
+  background: white;
+  border-radius: 20px;
   padding: 16px;
   margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(255, 99, 72, 0.06);
 }
 
 .week-header {
@@ -102,7 +140,7 @@
 
 .week-day text {
   font-size: 12px;
-  color: #636E72;
+  color: #FF6348;
   font-weight: 600;
 }
 
@@ -130,27 +168,32 @@
   background: transparent;
 }
 
+/* 打卡（1+）：粉→珊瑚 */
 .calendar-day.normal {
-  background: #DBEAFE;
-  color: #2563EB;
-  border-color: #BFDBFE;
+  background: linear-gradient(135deg, #FF6B9D, #FF6348);
+  color: white;
+  border-color: transparent;
+  opacity: 0.85;
 }
 
+/* 表现棒（3+）：天蓝→绿 */
 .calendar-day.good {
-  background: #FEF08A;
-  color: #A16207;
-  border-color: #FDE047;
+  background: linear-gradient(135deg, #4BCFFA, #26DE81);
+  color: white;
+  border-color: transparent;
 }
 
+/* 超级棒（5+）：琥珀→珊瑚 */
 .calendar-day.excellent {
-  background: #FACC15;
-  color: #854D0E;
-  border-color: #EAB308;
+  background: linear-gradient(135deg, #FFA502, #FF6348);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(255, 99, 72, 0.3);
 }
 
 .calendar-day.today {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+  border-color: #FF6348;
+  box-shadow: 0 0 0 3px rgba(255, 99, 72, 0.2);
 }
 
 .calendar-day.today .day-number {
@@ -158,7 +201,7 @@
 }
 
 .day-number {
-  font-size: 16px;
+  font-size: 14px;
   color: #2D3436;
   line-height: 1;
 }
@@ -166,38 +209,39 @@
 .calendar-day.normal .day-number,
 .calendar-day.good .day-number,
 .calendar-day.excellent .day-number {
-  color: inherit;
+  color: white;
 }
 
 .day-indicator {
   position: absolute;
-  bottom: 6px;
+  bottom: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .star {
-  font-size: 14px;
+  font-size: 10px;
 }
 
 .dot {
-  width: 8px;
-  height: 8px;
-  background: currentColor;
+  width: 6px;
+  height: 6px;
+  background: white;
   border-radius: 50%;
-  opacity: 0.5;
+  opacity: 0.8;
 }
 
 .streak-card {
   margin-top: 20px;
-  background: linear-gradient(135deg, #FFEAA7, #FD79A8);
-  border-radius: 16px;
+  background: linear-gradient(135deg, #FF6348, #FFA502);
+  border-radius: 20px;
   padding: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  box-shadow: 0 4px 16px rgba(255, 99, 72, 0.25);
 }
 
 .streak-icon {
@@ -207,7 +251,7 @@
 .streak-text {
   font-size: 16px;
   font-weight: 600;
-  color: #2D3436;
+  color: white;
 }
 
 .loading-container {
@@ -220,7 +264,7 @@
 .legend {
   display: flex;
   justify-content: center;
-  gap: 24px;
+  gap: 16px;
   margin-top: 20px;
   flex-wrap: wrap;
 }
@@ -228,39 +272,34 @@
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .legend-dot {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 10px;
 }
 
 .legend-dot.normal {
-  background: #DBEAFE;
-  color: #2563EB;
-  border: 1px solid #BFDBFE;
+  background: linear-gradient(135deg, #FF6B9D, #FF6348);
+  opacity: 0.85;
 }
 
 .legend-dot.good {
-  background: #FEF08A;
-  color: #A16207;
-  border: 1px solid #FDE047;
+  background: linear-gradient(135deg, #4BCFFA, #26DE81);
 }
 
 .legend-dot.excellent {
-  background: #FACC15;
-  color: #854D0E;
-  border: 1px solid #EAB308;
+  background: linear-gradient(135deg, #FFA502, #FF6348);
 }
 
 .legend-text {
-  font-size: 14px;
+  font-size: 13px;
   color: #636E72;
   font-weight: 500;
 }

@@ -1,6 +1,6 @@
 .task-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #FF6348 0%, #FFA502 100%);
   padding-bottom: 120px;
   overflow-x: hidden;
   width: 100%;
@@ -33,13 +33,14 @@
   position: absolute;
   top: 40px;
   right: 20px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(10px);
   border-radius: 20px;
   padding: 8px 16px;
   display: flex;
   align-items: center;
   gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .points-icon {
@@ -54,9 +55,10 @@
 
 .progress-card {
   margin-bottom: 20px;
-  background: #F8F9FA;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
   padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .progress-header {
@@ -69,34 +71,34 @@
 .progress-title {
   font-size: 18px;
   font-weight: 600;
-  color: #2D3436;
+  color: white;
 }
 
 .progress-text {
   font-size: 14px;
-  color: #636E72;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .progress-bar {
-  height: 8px;
-  background: #F0F0F0;
-  border-radius: 4px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #FF6B6B, #FF8E8E);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 5px;
   transition: width 0.3s ease;
 }
 
 .content-card {
   background: white;
   margin: 0 20px 20px;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(255, 99, 72, 0.15);
 }
 
 .task-list-container {

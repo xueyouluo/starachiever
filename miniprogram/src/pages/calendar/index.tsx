@@ -83,6 +83,12 @@ export default function CalendarPage() {
 
   return (
     <View className='calendar-page'>
+      {/* 渐变头部 */}
+      <View className='cal-header'>
+        <Text className='cal-header-title'>📅 打卡记录</Text>
+        <Text className='cal-header-sub'>{activeChild.name} 的成长轨迹</Text>
+      </View>
+
       <View className='content-wrapper'>
         {/* 统计卡片 */}
         <View className='stats-card'>

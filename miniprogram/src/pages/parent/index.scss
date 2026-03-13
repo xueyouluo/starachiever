@@ -1,6 +1,6 @@
 .parent-page {
   min-height: 100vh;
-  background: #F5F5F5;
+  background: #FFF5F0;
 }
 
 .auth-container {
@@ -10,18 +10,19 @@
   justify-content: center;
   height: 100vh;
   padding: 40px;
+  background: linear-gradient(135deg, #A29BFE 0%, #4BCFFA 100%);
 }
 
 .auth-title {
   font-size: 28px;
   font-weight: bold;
-  color: #2D3436;
+  color: white;
   margin-bottom: 8px;
 }
 
 .auth-subtitle {
   font-size: 14px;
-  color: #636E72;
+  color: rgba(255, 255, 255, 0.85);
   margin-bottom: 32px;
 }
 
@@ -32,68 +33,69 @@
 
 .password-input input {
   width: 100%;
-  height: 48px;
-  border: 1px solid #DFE6E9;
-  border-radius: 8px;
+  height: 52px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
   padding: 0 16px;
   font-size: 16px;
   text-align: center;
   letter-spacing: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
 }
 
 .auth-btn {
   width: 100%;
-  height: 48px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border-radius: 8px;
+  height: 52px;
+  background: white;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: #A29BFE;
   font-size: 16px;
   font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
+/* 胶囊/药丸 Tab 栏 */
 .tab-bar {
   display: flex;
   background: white;
-  padding: 12px 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 10px 12px;
+  box-shadow: 0 2px 12px rgba(255, 99, 72, 0.08);
   position: sticky;
   top: 0;
   z-index: 10;
+  gap: 4px;
+  border-bottom: 1px solid #FFE0D6;
 }
 
 .tab-item {
   flex: 1;
   text-align: center;
-  padding: 12px 0;
-  font-size: 16px;
+  padding: 10px 4px;
+  font-size: 14px;
   color: #636E72;
-  position: relative;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
 }
 
 .tab-item.active {
-  color: #667eea;
+  background: linear-gradient(135deg, #FF6348, #FFA502);
+  color: white;
   font-weight: 600;
 }
 
+/* 去掉旧的下划线指示器 */
 .tab-item.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 40px;
-  height: 3px;
-  background: #667eea;
-  border-radius: 2px;
+  display: none;
 }
 
 .child-selector {
   background: white;
   padding: 12px 16px;
-  border-bottom: 1px solid #F0F0F0;
+  border-bottom: 1px solid #FFE0D6;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -123,16 +125,16 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  background: #F5F5F5;
+  padding: 6px 14px;
+  background: #FFF0EC;
   border-radius: 20px;
   border: 2px solid transparent;
   white-space: nowrap;
 }
 
 .selector-item.active {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border-color: #667eea;
+  background: linear-gradient(135deg, #FF6348, #FFA502);
+  border-color: transparent;
 }
 
 .selector-item.active .selector-name {
@@ -151,15 +153,15 @@
 .content {
   height: calc(100vh - 140px);
   padding: 20px;
-  background: #F5F5F5;
+  background: #FFF5F0;
 }
 
 .tab-content {
   min-height: 100%;
   background: white;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(255, 99, 72, 0.08);
 }
 
 .section-title {
@@ -188,23 +190,25 @@
 
 .quick-btn {
   flex: 1;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #FF6348, #FFA502);
   color: white;
   padding: 14px;
-  border-radius: 8px;
+  border-radius: 12px;
   text-align: center;
   font-size: 15px;
   font-weight: 600;
+  box-shadow: 0 4px 12px rgba(255, 99, 72, 0.2);
 }
 
 .quick-btn.secondary {
-  background: linear-gradient(135deg, #95E1D3, #78E0DC);
+  background: linear-gradient(135deg, #4BCFFA, #26DE81);
+  box-shadow: 0 4px 12px rgba(75, 207, 250, 0.2);
 }
 
 .custom-input-card {
-  background: #F8F9FA;
-  border: 2px solid #E5E7EB;
-  border-radius: 12px;
+  background: #FFF5F0;
+  border: 2px solid #FFE0D6;
+  border-radius: 16px;
   padding: 20px;
   margin-bottom: 20px;
   width: 100%;
@@ -228,28 +232,30 @@
 .custom-input {
   width: 100%;
   height: 48px;
-  border: 1px solid #DFE6E9;
-  border-radius: 8px;
+  border: 2px solid #FFE0D6;
+  border-radius: 10px;
   padding: 0 12px;
   font-size: 16px;
   margin-bottom: 12px;
+  background: white;
 }
 
 .confirm-btn {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #FF6348, #FFA502);
   color: white;
-  padding: 12px;
-  border-radius: 8px;
+  padding: 14px;
+  border-radius: 12px;
   text-align: center;
   font-size: 14px;
   font-weight: 600;
   margin-top: 8px;
+  box-shadow: 0 4px 12px rgba(255, 99, 72, 0.2);
 }
 
 .member-card {
-  background: #F8F9FA;
-  border: 2px solid #F0F0F0;
-  border-radius: 12px;
+  background: white;
+  border: 2px solid #FFE0D6;
+  border-radius: 16px;
   padding: 16px;
   margin-bottom: 12px;
   display: flex;
@@ -275,8 +281,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border-radius: 12px;
+  background: linear-gradient(135deg, #FF6348, #FF6B9D);
+  border-radius: 14px;
 }
 
 .member-details {
@@ -293,7 +299,8 @@
 
 .member-points {
   font-size: 15px;
-  color: #FF6B6B;
+  color: #FF6348;
+  font-weight: 600;
 }
 
 .member-tasks {
@@ -307,30 +314,31 @@
 }
 
 .action-btn {
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
   font-size: 14px;
-  background: #F0F0F0;
-  color: #2D3436;
+  background: #FFF0EC;
+  color: #FF6348;
+  font-weight: 500;
 }
 
 .action-btn.danger {
-  background: #FFEAA7;
+  background: #FFF0EC;
   color: #D63031;
 }
 
 .action-btn.points {
-  background: #DFE6FF;
-  color: #667eea;
+  background: #EEF2FF;
+  color: #A29BFE;
 }
 
 .add-btn {
-  background: #F8F9FA;
-  border: 2px dashed #CBD5E1;
-  border-radius: 12px;
+  background: #FFF5F0;
+  border: 2px dashed #FFB3A7;
+  border-radius: 16px;
   padding: 16px;
   text-align: center;
-  color: #636E72;
+  color: #FF6348;
   font-size: 14px;
   font-weight: 600;
   margin-top: 8px;
@@ -340,9 +348,9 @@
 }
 
 .item-card {
-  background: #F8F9FA;
-  border: 2px solid #F0F0F0;
-  border-radius: 12px;
+  background: white;
+  border: 2px solid #FFE0D6;
+  border-radius: 16px;
   padding: 16px;
   margin-bottom: 12px;
   display: flex;
@@ -368,8 +376,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #F8F9FA;
-  border-radius: 8px;
+  background: #FFF0EC;
+  border-radius: 12px;
 }
 
 .item-details {
@@ -391,24 +399,26 @@
 
 .completed-badge {
   padding: 4px 8px;
-  background: #95E1D3;
+  background: linear-gradient(135deg, #26DE81, #4BCFFA);
   color: white;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 11px;
+  font-weight: 600;
 }
 
 .delete-btn {
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 12px;
-  background: #FF7675;
-  color: white;
+  background: #FEE2E2;
+  color: #EF4444;
+  font-weight: 600;
 }
 
 .data-card {
-  background: #F8F9FA;
-  border: 2px solid #F0F0F0;
-  border-radius: 12px;
+  background: white;
+  border: 2px solid #FFE0D6;
+  border-radius: 16px;
   padding: 20px;
   margin-bottom: 16px;
   width: 100%;
@@ -441,29 +451,33 @@
 .data-value {
   font-size: 32px;
   font-weight: bold;
-  color: #667eea;
+  color: #FF6348;
 }
 
 .data-btn {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #FF6348, #FFA502);
   color: white;
-  padding: 12px;
-  border-radius: 8px;
+  padding: 14px;
+  border-radius: 12px;
   text-align: center;
   font-size: 14px;
   font-weight: 600;
+  box-shadow: 0 4px 12px rgba(255, 99, 72, 0.2);
 }
 
 .data-btn.secondary {
-  background: linear-gradient(135deg, #95E1D3, #78E0DC);
+  background: linear-gradient(135deg, #26DE81, #4BCFFA);
+  box-shadow: 0 4px 12px rgba(38, 222, 129, 0.2);
 }
 
 .data-btn.cloud {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #A29BFE, #4BCFFA);
+  box-shadow: 0 4px 12px rgba(162, 155, 254, 0.2);
 }
 
 .data-btn.cloud-restore {
-  background: linear-gradient(135deg, #74B9FF, #0984E3);
+  background: linear-gradient(135deg, #4BCFFA, #26DE81);
+  box-shadow: 0 4px 12px rgba(75, 207, 250, 0.2);
 }
 
 .privacy-link {
@@ -474,9 +488,9 @@
 }
 
 .category-card {
-  background: #F8F9FA;
-  border: 2px solid #F0F0F0;
-  border-radius: 12px;
+  background: white;
+  border: 2px solid #FFE0D6;
+  border-radius: 16px;
   padding: 16px;
   margin-bottom: 12px;
   display: flex;
@@ -507,8 +521,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #F8F9FA;
-  border-radius: 8px;
+  background: #FFF0EC;
+  border-radius: 12px;
 }
 
 .category-details {
@@ -532,7 +546,7 @@
   padding: 4px 8px;
   background: #B2BEC3;
   color: white;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 11px;
   margin-left: 8px;
 }

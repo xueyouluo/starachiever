@@ -23,7 +23,7 @@ const getColorFromClass = (colorClass: string): string => {
     'bg-red-100 text-red-600': '#EF4444',
     'bg-red-100 text-red-700': '#DC2626',
   }
-  return colorMap[colorClass] || '#667eea'
+  return colorMap[colorClass] || '#FF6348'
 }
 
 // 获取背景色（更浅的版本）
@@ -42,7 +42,7 @@ const getBgColorFromClass = (colorClass: string): string => {
     'bg-red-100 text-red-600': '#FEE2E2',
     'bg-red-100 text-red-700': '#FEE2E2',
   }
-  return bgMap[colorClass] || '#E0E7FF'
+  return bgMap[colorClass] || '#FFF0EC'
 }
 
 export default function TaskCard({ task, onToggle }: TaskCardProps) {

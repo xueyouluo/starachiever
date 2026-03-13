@@ -1,54 +1,87 @@
 .profile-page {
   min-height: 100vh;
-  background: #F5F5F5;
+  background: #FFF5F0;
 }
 
 .profile-header {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  padding: 40px 20px;
+  background: linear-gradient(135deg, #FF6B9D, #FF6348);
+  padding: 40px 20px 40px;
   display: flex;
   flex-direction: column;
   align-items: center;
   color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-header::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 120px;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+.profile-header::after {
+  content: '';
+  position: absolute;
+  bottom: -30px;
+  left: -10px;
+  width: 90px;
+  height: 90px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
 }
 
 .avatar {
-  width: 80px;
-  height: 80px;
+  width: 88px;
+  height: 88px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
+  background: rgba(255, 255, 255, 0.25);
   margin-bottom: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  position: relative;
+  z-index: 1;
 }
 
 .avatar-text {
-  font-size: 40px;
+  font-size: 44px;
 }
 
 .name {
   font-size: 24px;
   font-weight: bold;
   margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
 }
 
 .switch-btn {
   background: rgba(255, 255, 255, 0.2);
-  padding: 8px 16px;
+  padding: 8px 20px;
   border-radius: 20px;
   font-size: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  z-index: 1;
 }
 
+/* 三色统计卡片 */
 .stats-container {
   display: flex;
-  background: white;
-  margin: -20px 20px 20px;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin: -24px 20px 20px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(255, 99, 72, 0.15);
   position: relative;
+  z-index: 2;
 }
 
 .stat-item {
@@ -56,31 +89,57 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 20px 8px;
+}
+
+.stat-item:nth-child(1) {
+  background: #FFF0EC;
+}
+
+/* stat-divider 占据 child(2)，连续打卡在 child(3) */
+.stat-item:nth-child(3) {
+  background: #ECFDF5;
+}
+
+/* stat-divider 占据 child(4)，完成任务在 child(5) */
+.stat-item:nth-child(5) {
+  background: #EEF2FF;
 }
 
 .stat-value {
   font-size: 28px;
   font-weight: bold;
-  color: #667eea;
   margin-bottom: 4px;
 }
 
+.stat-item:nth-child(1) .stat-value {
+  color: #FF6348;
+}
+
+.stat-item:nth-child(3) .stat-value {
+  color: #26DE81;
+}
+
+.stat-item:nth-child(5) .stat-value {
+  color: #A29BFE;
+}
+
 .stat-label {
-  font-size: 12px;
+  font-size: 11px;
   color: #636E72;
+  font-weight: 600;
 }
 
 .stat-divider {
-  width: 1px;
-  background: #F0F0F0;
-  margin: 0 16px;
+  display: none;
 }
 
 .badges-section {
   background: white;
   margin: 0 20px 20px;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 20px;
+  box-shadow: 0 4px 20px rgba(255, 99, 72, 0.08);
 }
 
 .section-header {
@@ -109,18 +168,20 @@
 
 .badge-item {
   border: 2px solid;
-  border-radius: 12px;
-  padding: 12px;
+  border-radius: 16px;
+  padding: 12px 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  background: #F8F9FA;
+  background: white;
+  box-shadow: 0 2px 8px rgba(255, 99, 72, 0.08);
 }
 
 .badge-item.locked {
   opacity: 0.5;
   border-color: #DFE6E9;
+  box-shadow: none;
 }
 
 .badge-icon {
@@ -148,16 +209,17 @@
 
 .parent-mode-btn {
   margin: 0 20px 40px;
-  background: linear-gradient(135deg, #FFEAA7, #FD79A8);
-  border-radius: 16px;
+  background: linear-gradient(135deg, #FF6348, #FFA502);
+  border-radius: 20px;
   padding: 16px;
   text-align: center;
+  box-shadow: 0 4px 16px rgba(255, 99, 72, 0.25);
 }
 
 .parent-mode-text {
   font-size: 16px;
   font-weight: 600;
-  color: #2D3436;
+  color: white;
 }
 
 .loading-container {

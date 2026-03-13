@@ -34,28 +34,32 @@ const CalendarTab: React.FC<CalendarTabProps> = ({ history }) => {
   const getDayContent = (day: number) => {
     const dateStr = formatDate(day);
     const count = history[dateStr] || 0;
-    
-    let style = "bg-white text-gray-700";
+
+    let className = "bg-white text-gray-600";
+    let inlineStyle: React.CSSProperties = {};
     let icon = null;
 
     if (count > 0) {
       if (count >= 5) {
-        style = "bg-yellow-400 text-white shadow-md border-yellow-500";
+        className = "text-white shadow-md";
+        inlineStyle = { background: 'linear-gradient(135deg, #FFA502, #FF6348)' };
         icon = <Star size={12} fill="currentColor" />;
       } else if (count >= 3) {
-        style = "bg-yellow-200 text-yellow-800 border-yellow-300";
-        icon = <Star size={10} fill="currentColor" className="opacity-50"/>;
+        className = "text-white";
+        inlineStyle = { background: 'linear-gradient(135deg, #4BCFFA, #26DE81)' };
+        icon = <Star size={10} fill="currentColor" className="opacity-70"/>;
       } else {
-        style = "bg-blue-100 text-blue-600 border-blue-200";
+        className = "text-white";
+        inlineStyle = { background: 'linear-gradient(135deg, #FF6B9D, #FF6348)', opacity: 0.85 };
       }
     }
 
     const isToday = dateStr === new Date().toISOString().split('T')[0];
     if (isToday) {
-      style += " ring-2 ring-kid-blue ring-offset-1 font-bold";
+      className += " ring-2 ring-kid-coral ring-offset-1 font-bold";
     }
 
-    return { style, icon, count };
+    return { className, inlineStyle, icon, count };
   };
 
   // Calculate stats for this month
@@ -65,30 +69,30 @@ const CalendarTab: React.FC<CalendarTabProps> = ({ history }) => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* Header Card */}
-      <div className="bg-white rounded-3xl p-6 shadow-lg relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 -translate-y-10 translate-x-10"></div>
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 translate-y-10 -translate-x-10"></div>
-        
+      {/* Gradient Header */}
+      <div className="rounded-3xl p-6 text-white relative overflow-hidden" style={{background: 'linear-gradient(135deg, #4BCFFA 0%, #26DE81 100%)', boxShadow: '0 8px 32px rgba(75,207,250,0.25)'}}>
+        <div className="absolute top-0 right-0 w-28 h-28 bg-white opacity-10 rounded-full -translate-y-8 translate-x-8"></div>
+        <div className="absolute bottom-0 left-0 w-20 h-20 bg-white opacity-10 rounded-full translate-y-6 -translate-x-6"></div>
         <div className="relative z-10 flex flex-col items-center">
-           <h2 className="text-gray-500 text-sm font-bold uppercase tracking-widest mb-1">本月累计打卡</h2>
-           <div className="text-5xl font-black text-kid-blue mb-2 flex items-baseline gap-2">
-             {totalTasksThisMonth}
-             <span className="text-lg text-gray-400 font-bold">次</span>
-           </div>
-           <p className="text-xs text-gray-400">每一天都在进步！</p>
+          <div className="text-3xl mb-1">📅</div>
+          <h2 className="text-xl font-black mb-1">打卡记录</h2>
+          <div className="text-5xl font-black mb-1 flex items-baseline gap-2">
+            {totalTasksThisMonth}
+            <span className="text-xl font-bold text-white/70">次</span>
+          </div>
+          <p className="text-sm text-white/80 font-bold">本月累计打卡 · 每一天都在进步！</p>
         </div>
       </div>
 
       {/* Calendar Control */}
       <div className="flex items-center justify-between px-4">
-        <button onClick={prevMonth} className="p-2 bg-white rounded-full shadow-sm text-gray-500 hover:text-kid-blue">
+        <button onClick={prevMonth} className="p-2 bg-white rounded-full shadow-sm text-gray-500 hover:text-kid-coral transition-colors">
           <ChevronLeft size={24} />
         </button>
         <h3 className="text-xl font-black text-gray-800">
           {year}年 {month + 1}月
         </h3>
-        <button onClick={nextMonth} className="p-2 bg-white rounded-full shadow-sm text-gray-500 hover:text-kid-blue">
+        <button onClick={nextMonth} className="p-2 bg-white rounded-full shadow-sm text-gray-500 hover:text-kid-coral transition-colors">
           <ChevronRight size={24} />
         </button>
       </div>
@@ -110,10 +114,10 @@ const CalendarTab: React.FC<CalendarTabProps> = ({ history }) => {
           
           {Array.from({ length: daysInMonth }).map((_, i) => {
             const day = i + 1;
-            const { style, icon, count } = getDayContent(day);
-            
+            const { className, inlineStyle, icon, count } = getDayContent(day);
+
             return (
-              <div key={day} className={`aspect-square rounded-xl flex flex-col items-center justify-center text-sm border-2 border-transparent transition-all ${style}`}>
+              <div key={day} className={`aspect-square rounded-xl flex flex-col items-center justify-center text-sm border-2 border-transparent transition-all ${className}`} style={inlineStyle}>
                 <span className="leading-none">{day}</span>
                 {count > 0 && (
                   <div className="mt-1 flex items-center justify-center">
@@ -127,17 +131,21 @@ const CalendarTab: React.FC<CalendarTabProps> = ({ history }) => {
       </div>
       
       {/* Legend */}
-      <div className="flex justify-center gap-6 text-xs text-gray-500 font-medium">
-         <div className="flex items-center gap-2">
-           <div className="w-3 h-3 rounded-full bg-blue-100 border border-blue-200"></div>
-           <span>完成任务</span>
-         </div>
-         <div className="flex items-center gap-2">
-           <div className="w-3 h-3 rounded-full bg-yellow-400 border border-yellow-500 flex items-center justify-center">
-             <Star size={8} className="text-white" fill="currentColor"/>
-           </div>
-           <span>表现超棒 (5+)</span>
-         </div>
+      <div className="flex justify-center gap-4 text-xs text-gray-500 font-medium flex-wrap">
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-full" style={{background: 'linear-gradient(135deg, #FF6B9D, #FF6348)'}}></div>
+          <span>打卡</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-full" style={{background: 'linear-gradient(135deg, #4BCFFA, #26DE81)'}}></div>
+          <span>表现棒 (3+)</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-full flex items-center justify-center" style={{background: 'linear-gradient(135deg, #FFA502, #FF6348)'}}>
+            <Star size={7} className="text-white" fill="currentColor"/>
+          </div>
+          <span>超级棒 (5+)</span>
+        </div>
       </div>
     </div>
   );

@@ -1,12 +1,12 @@
 .task-card {
   display: flex;
   align-items: center;
-  background: #F8F9FA;
-  border: 2px solid #F0F0F0;
-  border-radius: 12px;
-  padding: 12px 16px;
+  background: #FFFFFF;
+  border-left: 4px solid #FF6348;
+  border-radius: 16px;
+  padding: 14px 16px;
   margin-bottom: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px rgba(255, 99, 72, 0.08);
   transition: all 0.3s ease;
   width: 100%;
   max-width: 100%;
@@ -21,8 +21,10 @@
 }
 
 .task-card.completed {
-  opacity: 0.6;
-  background: #F8F9FA !important;
+  opacity: 0.65;
+  background: #FAFAFA !important;
+  border-left-color: #D1D5DB !important;
+  box-shadow: none;
 }
 
 .task-card.completed .task-title {
@@ -34,12 +36,12 @@
   width: 48px;
   height: 48px;
   min-width: 48px;
-  border-radius: 10px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 24px;
-  margin-right: 10px;
+  margin-right: 12px;
   flex-shrink: 0;
 }
 
@@ -47,7 +49,7 @@
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  margin-right: 6px;
+  margin-right: 8px;
 }
 
 .task-title {
@@ -55,7 +57,7 @@
   font-weight: 600;
   color: #2D3436;
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -70,10 +72,17 @@
 }
 
 .task-points {
-  font-size: 14px;
-  color: #FF6B6B;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, #FF6348, #FFA502);
+  padding: 2px 8px;
+  border-radius: 20px;
   flex-shrink: 0;
+}
+
+.task-card.completed .task-points {
+  background: #D1D5DB;
 }
 
 .task-category-badge {
@@ -90,10 +99,10 @@
 }
 
 .check-badge {
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
-  background: linear-gradient(135deg, #95E1D3, #78E0DC);
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background: linear-gradient(135deg, #26DE81, #4BCFFA);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -102,8 +111,9 @@
   margin-left: 6px;
 }
 
+/* 覆盖 inline style 中传入的 backgroundColor，统一使用渐变 */
 .check-badge[style*="background"] {
-  background: none !important;
+  background: linear-gradient(135deg, #26DE81, #4BCFFA) !important;
 }
 
 .check-icon {

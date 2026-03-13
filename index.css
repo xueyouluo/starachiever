@@ -1,6 +1,6 @@
 /* Global Styles for StarAchiever Kids */
 body {
-  background-color: #F3F4F6;
+  background-color: #FFF5F0;
   font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
 }
 
@@ -9,14 +9,14 @@ body {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #FFE0D6;
 }
 ::-webkit-scrollbar-thumb {
-  background: #FBBF24;
+  background: #FF6348;
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #F59E0B;
+  background: #FFA502;
 }
 
 /* Slide up animation */

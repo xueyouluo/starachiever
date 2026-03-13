@@ -1,18 +1,39 @@
-/* 颜色变量 */
-$primary-color: #FF6B6B;
-$secondary-color: #4ECDC4;
-$success-color: #95E1D3;
-$warning-color: #FFEAA7;
-$danger-color: #FF7675;
-$info-color: #74B9FF;
+/* 颜色变量 — 活泼色彩系统 */
+$primary:         #FF6348;   // 珊瑚红
+$primary-light:   #FF8C6E;
+$primary-bg:      #FFF0EC;
+$amber:           #FFA502;   // 琥珀黄
+$green:           #26DE81;   // 活力绿
+$blue:            #4BCFFA;   // 天蓝
+$purple:          #A29BFE;   // 紫色
+$pink:            #FF6B9D;   // 粉红
+$bg-page:         #FFF5F0;   // 暖奶油（全局背景）
+$border-color:    #FFE0D6;   // 暖色调边框
 
-$text-color: #2D3436;
-$text-secondary: #636E72;
-$text-light: #B2BEC3;
+/* 各页独有渐变 */
+$gradient-primary:  linear-gradient(135deg, #FF6348 0%, #FFA502 100%);  // 任务页
+$gradient-profile:  linear-gradient(135deg, #FF6B9D 0%, #FF6348 100%);  // 个人页
+$gradient-calendar: linear-gradient(135deg, #4BCFFA 0%, #26DE81 100%);  // 日历页
+$gradient-parent:   linear-gradient(135deg, #A29BFE 0%, #4BCFFA 100%);  // 家长页
+$gradient-child:    linear-gradient(135deg, #FF6348 0%, #FF6B9D 100%);  // 选择孩子
 
-$bg-color: #F5F5F5;
-$bg-white: #FFFFFF;
-$border-color: #DFE6E9;
+/* 彩色阴影 */
+$shadow-card: 0 4px 20px rgba(255, 99, 72, 0.10);
+
+/* 旧变量兼容（保留） */
+$primary-color:   #FF6348;
+$secondary-color: #4BCFFA;
+$success-color:   #26DE81;
+$warning-color:   #FFA502;
+$danger-color:    #FF6348;
+$info-color:      #A29BFE;
+
+$text-color:       #2D3436;
+$text-secondary:   #636E72;
+$text-light:       #B2BEC3;
+
+$bg-color:     #FFF5F0;
+$bg-white:     #FFFFFF;
 
 /* 间距变量 */
 $spacing-xs: 4px;
@@ -22,18 +43,18 @@ $spacing-lg: 24px;
 $spacing-xl: 32px;
 
 /* 圆角变量 */
-$radius-sm: 4px;
-$radius-md: 8px;
-$radius-lg: 16px;
-$radius-xl: 24px;
+$radius-sm:   4px;
+$radius-md:   8px;
+$radius-lg:   16px;
+$radius-xl:   24px;
 $radius-full: 9999px;
 
 /* 字体大小 */
-$font-xs: 12px;
-$font-sm: 14px;
-$font-md: 16px;
-$font-lg: 18px;
-$font-xl: 20px;
+$font-xs:  12px;
+$font-sm:  14px;
+$font-md:  16px;
+$font-lg:  18px;
+$font-xl:  20px;
 $font-2xl: 24px;
 $font-3xl: 32px;
 

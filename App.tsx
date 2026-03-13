@@ -432,35 +432,38 @@ const App: React.FC = () => {
       return (
           <div className="min-h-screen bg-kid-bg flex flex-col items-center justify-center p-6 relative overflow-hidden">
                {/* Background decorations */}
-               <div className="absolute top-0 left-0 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 -translate-x-10 -translate-y-10"></div>
-               <div className="absolute bottom-0 right-0 w-64 h-64 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 translate-x-10 translate-y-10"></div>
-               
-               <h1 className="text-3xl font-black text-gray-800 mb-8 relative z-10">谁在打卡? 🤔</h1>
-               
+               <div className="absolute top-0 left-0 w-64 h-64 rounded-full mix-blend-multiply filter blur-3xl opacity-40 -translate-x-10 -translate-y-10" style={{background: '#FF6348'}}></div>
+               <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full mix-blend-multiply filter blur-3xl opacity-30 translate-x-10 translate-y-10" style={{background: '#FF6B9D'}}></div>
+               <div className="absolute top-1/2 right-0 w-48 h-48 rounded-full mix-blend-multiply filter blur-3xl opacity-25 translate-x-8" style={{background: '#FFA502'}}></div>
+
+               <h1 className="text-3xl font-black text-gray-800 mb-2 relative z-10">谁在打卡? 🤔</h1>
+               <p className="text-gray-400 text-sm font-bold mb-8 relative z-10">选择你的头像开始今天的任务</p>
+
                <div className="grid grid-cols-2 gap-6 w-full max-w-sm mb-10 relative z-10">
                    {childrenList.map(child => (
-                       <button 
+                       <button
                         key={child.id}
                         onClick={() => setActiveChildId(child.id)}
-                        className="bg-white p-6 rounded-3xl shadow-xl flex flex-col items-center gap-3 transition-transform hover:scale-105 active:scale-95 border-4 border-transparent hover:border-kid-blue"
+                        className="bg-white p-6 rounded-3xl shadow-xl flex flex-col items-center gap-3 transition-transform hover:scale-105 active:scale-95"
+                        style={{borderLeft: '4px solid #FF6348', boxShadow: '0 8px 24px rgba(255,99,72,0.15)'}}
                        >
                            <div className="text-6xl">{child.avatar}</div>
                            <span className="font-bold text-lg text-gray-700">{child.name}</span>
-                           <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-full">⭐️ {child.totalPoints}</span>
+                           <span className="text-xs font-bold text-white px-3 py-1 rounded-full" style={{background: 'linear-gradient(135deg, #FF6348, #FFA502)'}}>⭐️ {child.totalPoints}</span>
                        </button>
                    ))}
-                   
-                   <button 
+
+                   <button
                     onClick={() => setIsParentModeOpen(true)}
-                    className="bg-gray-100 p-6 rounded-3xl border-4 border-dashed border-gray-300 flex flex-col items-center justify-center gap-3 hover:bg-white hover:border-gray-400 transition-colors"
+                    className="bg-white/80 p-6 rounded-3xl border-4 border-dashed border-[#FFE0D6] flex flex-col items-center justify-center gap-3 hover:bg-white hover:border-kid-coral transition-colors"
                    >
-                       <PlusCircle size={40} className="text-gray-400" />
+                       <PlusCircle size={40} className="text-kid-coral opacity-60" />
                        <span className="font-bold text-gray-500">添加成员</span>
                    </button>
                </div>
-               
+
                <div className="absolute bottom-10">
-                   <button onClick={() => setIsParentModeOpen(true)} className="text-gray-400 text-sm font-bold flex items-center gap-1 hover:text-gray-600">
+                   <button onClick={() => setIsParentModeOpen(true)} className="text-gray-400 text-sm font-bold flex items-center gap-1 hover:text-kid-coral transition-colors">
                        <User size={16} /> 家长模式
                    </button>
                </div>
@@ -520,7 +523,7 @@ const App: React.FC = () => {
 
         return (
           <div className="space-y-2">
-            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 text-white mb-6 shadow-lg relative overflow-hidden">
+            <div className="rounded-2xl p-6 text-white mb-6 relative overflow-hidden" style={{background: 'linear-gradient(135deg, #FF6348 0%, #FFA502 100%)', boxShadow: '0 8px 32px rgba(255,99,72,0.25)'}}>
                <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -translate-y-10 translate-x-10"></div>
 
                <div className="relative z-10">
@@ -613,7 +616,7 @@ const App: React.FC = () => {
       case Tab.REWARDS:
         return (
           <div>
-             <div className="bg-gradient-to-r from-green-400 to-teal-500 rounded-2xl p-6 text-white mb-6 shadow-lg text-center relative">
+             <div className="rounded-2xl p-6 text-white mb-6 text-center relative overflow-hidden" style={{background: 'linear-gradient(135deg, #26DE81 0%, #4BCFFA 100%)', boxShadow: '0 8px 32px rgba(38,222,129,0.25)'}}>
                {/* User badge */}
                <div className="absolute top-4 left-4 flex items-center gap-1 opacity-50">
                     <span className="text-sm">{currentChild.avatar}</span>
@@ -655,9 +658,10 @@ const App: React.FC = () => {
                 <ProfileTab user={userStateCompatible} badges={currentChild.badges} />
                 
                 <div className="mt-8 px-4">
-                    <button 
-                        onClick={() => setActiveChildId(null)} 
-                        className="w-full bg-white border-2 border-gray-200 text-gray-500 font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-50"
+                    <button
+                        onClick={() => setActiveChildId(null)}
+                        className="w-full bg-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#FFF0EC] transition-colors"
+                        style={{border: '2px solid #FFE0D6', color: '#FF6348'}}
                     >
                         <LogOut size={18} />
                         切换用户
@@ -694,7 +698,7 @@ const App: React.FC = () => {
         <div className="fixed inset-0 z-[60] flex items-center justify-center px-6 animate-fadeIn">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
           <div className="bg-white rounded-3xl p-8 text-center relative z-10 shadow-2xl max-w-sm animate-bounce">
-            <div className="text-xs font-bold text-kid-blue uppercase tracking-widest mb-2">新成就解锁!</div>
+            <div className="text-xs font-bold text-kid-coral uppercase tracking-widest mb-2">新成就解锁!</div>
             <div className={`w-28 h-28 mx-auto rounded-full flex items-center justify-center text-6xl mb-4 shadow-lg ${newBadge.color}`}>
               {newBadge.icon}
             </div>
@@ -739,9 +743,10 @@ const App: React.FC = () => {
                   }}
                   className={`p-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${
                     child.id === activeChildId
-                      ? 'bg-indigo-100 border-2 border-indigo-500'
-                      : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                      ? 'border-2'
+                      : 'bg-gray-50 border-2 border-transparent hover:bg-[#FFF0EC]'
                   }`}
+                  style={child.id === activeChildId ? {background: '#FFF0EC', borderColor: '#FF6348'} : {}}
                 >
                   <div className="text-4xl">{child.avatar}</div>
                   <span className="font-bold text-gray-700">{child.name}</span>
