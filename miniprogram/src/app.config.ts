@@ -3,6 +3,7 @@ export default {
   pages: [
     'pages/index/index',
     'pages/calendar/index',
+    'pages/rewards/index',
     'pages/profile/index',
     'pages/select-child/index',
     'pages/parent/index',
@@ -28,6 +29,10 @@ export default {
       {
         pagePath: 'pages/calendar/index',
         text: '日历'
+      },
+      {
+        pagePath: 'pages/rewards/index',
+        text: '奖励'
       },
       {
         pagePath: 'pages/profile/index',
