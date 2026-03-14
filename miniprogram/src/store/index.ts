@@ -10,6 +10,33 @@ const backgroundSync = () => {
   }).catch(() => {})
 }
 
+// 每日重置：若 lastLoginDate 不是今天，重置任务并更新连续打卡天数
+const applyDailyReset = (child: ChildProfile): { child: ChildProfile; changed: boolean } => {
+  const today = new Date().toISOString().split('T')[0]
+  if (child.lastLoginDate === today) {
+    return { child, changed: false }
+  }
+
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  const yesterdayStr = yesterday.toISOString().split('T')[0]
+
+  // 方案B：昨天打开过 AND 昨天至少完成1个任务，才算连续
+  const yesterdayTaskCount = child.history[yesterdayStr] || 0
+  const newStreak = (child.lastLoginDate === yesterdayStr && yesterdayTaskCount > 0)
+    ? child.currentStreak + 1
+    : 0
+
+  const resetChild: ChildProfile = {
+    ...child,
+    tasks: child.tasks.map(t => ({ ...t, completed: false })),
+    lastLoginDate: today,
+    currentStreak: newStreak
+  }
+
+  return { child: resetChild, changed: true }
+}
+
 interface AppState {
   activeChild: ChildProfile | null
   children: ChildProfile[]
@@ -48,10 +75,22 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const data = await storage.getData()
       if (data && data.children.length > 0) {
-        // 有数据，加载现有数据
-        const activeChild = data.children.find(c => c.id === data.activeChildId) || data.children[0]
+        // 每日重置：检查每个孩子是否需要重置任务
+        let anyChanged = false
+        const updatedChildren = data.children.map(child => {
+          const { child: resetChild, changed } = applyDailyReset(child)
+          if (changed) anyChanged = true
+          return resetChild
+        })
+
+        // 若有任何孩子被重置，持久化保存
+        if (anyChanged) {
+          await storage.setData({ children: updatedChildren, activeChildId: data.activeChildId })
+        }
+
+        const activeChild = updatedChildren.find(c => c.id === data.activeChildId) || updatedChildren[0]
         set({
-          children: data.children,
+          children: updatedChildren,
           activeChild
         })
       } else {
