@@ -88,6 +88,47 @@ export interface UserState {
   unlockedBadges: string[];
 }
 
+// 宠物相关类型
+export interface PetType {
+  id: string;
+  name: string;
+  emoji: [string, string, string]; // [幼崽, 少年, 成年] 三阶段 emoji
+  price: number;                   // 领养价格（积分）
+  description: string;
+  speciality: string;
+  feedBonus: number;               // 喂食效果倍率
+  cleanBonus: number;              // 洗澡效果倍率
+  playBonus: number;               // 玩耍效果倍率
+  hungerDecayRate: number;         // 饱食度衰减速率倍率
+  dirtDecayRate: number;
+  happinessDecayRate: number;
+}
+
+export type PetStage = 'baby' | 'teen' | 'adult';
+export type PetMood = 'ecstatic' | 'happy' | 'normal' | 'sad' | 'sick';
+export type PetActionType = 'feed' | 'clean' | 'play';
+
+export interface PetCareLog {
+  id: string;
+  actionType: PetActionType;
+  cost: number;
+  timestamp: string;
+}
+
+export interface Pet {
+  id: string;
+  petTypeId: string;
+  name: string;
+  stage: PetStage;
+  careCount: number;       // 累计照料次数（决定升级）
+  hunger: number;          // 饱食度 0-100
+  cleanliness: number;     // 清洁度 0-100
+  happiness: number;       // 快乐度 0-100
+  lastUpdatedAt: string;   // ISO 时间戳，计算时间衰减
+  adoptedAt: string;
+  careLogs: PetCareLog[];  // 最近 50 条照料记录
+}
+
 export interface ChildProfile {
   id: string;
   name: string;
@@ -109,6 +150,9 @@ export interface ChildProfile {
   lastLoginDate: string; // YYYY-MM-DD
   unlockedBadges: string[]; // List of Badge IDs
   stats: UserStats;
+
+  // 宠物（可选，无宠物时为 undefined）
+  pet?: Pet;
 }
 
 export interface AppData {
@@ -122,4 +166,5 @@ export enum Tab {
   CALENDAR = 'CALENDAR',
   REWARDS = 'REWARDS',
   PROFILE = 'PROFILE',
+  PET = 'PET',
 }

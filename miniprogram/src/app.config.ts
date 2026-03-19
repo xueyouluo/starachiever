@@ -5,6 +5,7 @@ export default {
     'pages/calendar/index',
     'pages/rewards/index',
     'pages/profile/index',
+    'pages/pet/index',
     'pages/select-child/index',
     'pages/parent/index',
     'pages/privacy/index'
@@ -37,6 +38,10 @@ export default {
       {
         pagePath: 'pages/profile/index',
         text: '我的'
+      },
+      {
+        pagePath: 'pages/pet/index',
+        text: '宠物🐾'
       }
     ]
   }

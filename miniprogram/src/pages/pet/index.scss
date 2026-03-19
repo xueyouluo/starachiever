@@ -1,0 +1,394 @@
+.pet-page {
+  min-height: 100vh;
+  background: #FFF5F0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 顶部栏 */
+.pet-header {
+  background: linear-gradient(135deg, #FF6348 0%, #FFA502 100%);
+  padding: 24px 20px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+}
+
+.header-points {
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+}
+
+/* 滚动区域 */
+.scroll-area {
+  flex: 1;
+  padding: 16px;
+  height: calc(100vh - 100px);
+}
+
+/* 宠物展示区 */
+.pet-showcase {
+  background: white;
+  border-radius: 24px;
+  padding: 28px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(255, 99, 72, 0.1);
+  margin-bottom: 16px;
+}
+
+.pet-emoji-big {
+  font-size: 88px;
+  line-height: 1;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.bounce {
+  animation: bounce 1.8s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.pet-mood-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.pet-mood-emoji {
+  font-size: 22px;
+}
+
+.pet-mood-label {
+  font-size: 15px;
+  color: #636E72;
+}
+
+.pet-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pet-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: #2D3436;
+}
+
+.pet-stage-badge {
+  background: linear-gradient(135deg, #FF6348, #FFA502);
+  border-radius: 20px;
+  padding: 3px 12px;
+}
+
+.pet-stage-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+/* 属性卡片 */
+.stats-card {
+  background: white;
+  border-radius: 20px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 20px rgba(255, 99, 72, 0.08);
+  margin-bottom: 16px;
+}
+
+.stats-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2D3436;
+  display: block;
+  margin-bottom: 14px;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.stat-row:last-child {
+  margin-bottom: 0;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #636E72;
+  width: 68px;
+  flex-shrink: 0;
+}
+
+.stat-bar-bg {
+  flex: 1;
+  height: 10px;
+  background: #F0F0F0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}
+
+.stat-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2D3436;
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* 操作区 */
+.actions-card {
+  background: white;
+  border-radius: 20px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 20px rgba(255, 99, 72, 0.08);
+  margin-bottom: 16px;
+}
+
+.actions-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2D3436;
+  display: block;
+  margin-bottom: 14px;
+}
+
+.actions-row {
+  display: flex;
+  gap: 12px;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 8px;
+  border-radius: 16px;
+  gap: 4px;
+}
+
+.action-btn.active {
+  background: linear-gradient(135deg, #FF6348, #FFA502);
+  box-shadow: 0 4px 12px rgba(255, 99, 72, 0.25);
+}
+
+.action-btn.disabled {
+  background: #F3F4F6;
+}
+
+.action-emoji {
+  font-size: 26px;
+}
+
+.action-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.action-btn.active .action-label,
+.action-btn.active .action-cost {
+  color: white;
+}
+
+.action-btn.disabled .action-label,
+.action-btn.disabled .action-cost {
+  color: #9CA3AF;
+}
+
+.action-cost {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* 成长卡片 */
+.growth-card {
+  background: white;
+  border-radius: 20px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 20px rgba(255, 99, 72, 0.08);
+  margin-bottom: 16px;
+}
+
+.growth-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2D3436;
+  display: block;
+  margin-bottom: 14px;
+}
+
+.growth-stages {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.growth-stage {
+  font-size: 12px;
+  color: #B2BEC3;
+  flex-shrink: 0;
+}
+
+.growth-stage.active {
+  color: #FF6348;
+  font-weight: 700;
+}
+
+.growth-line {
+  flex: 1;
+  height: 6px;
+  background: #F0F0F0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.growth-progress {
+  height: 100%;
+  background: linear-gradient(90deg, #FF6348, #FFA502);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.growth-count {
+  font-size: 12px;
+  color: #B2BEC3;
+  text-align: center;
+  display: block;
+}
+
+/* 商店 */
+.shop-hint {
+  font-size: 14px;
+  color: #B2BEC3;
+  text-align: center;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.shop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shop-card {
+  background: white;
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 4px 20px rgba(255, 99, 72, 0.08);
+}
+
+.shop-pet-emoji {
+  font-size: 52px;
+  flex-shrink: 0;
+  width: 60px;
+  text-align: center;
+}
+
+.shop-pet-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.shop-pet-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #2D3436;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.shop-pet-desc {
+  font-size: 12px;
+  color: #636E72;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.shop-pet-special {
+  font-size: 11px;
+  color: #FF6348;
+  display: block;
+}
+
+.shop-adopt-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.shop-price {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FF6348;
+}
+
+.shop-price.unaffordable {
+  color: #B2BEC3;
+}
+
+.shop-adopt-btn {
+  padding: 8px 16px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.shop-adopt-btn.active {
+  background: linear-gradient(135deg, #FF6348, #FFA502);
+  box-shadow: 0 4px 12px rgba(255, 99, 72, 0.25);
+}
+
+.shop-adopt-btn.disabled {
+  background: #F3F4F6;
+}
+
+.shop-adopt-text {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.shop-adopt-btn.active .shop-adopt-text {
+  color: white;
+}
+
+.shop-adopt-btn.disabled .shop-adopt-text {
+  color: #9CA3AF;
+}
+
+/* 加载 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}

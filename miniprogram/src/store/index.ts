@@ -2,6 +2,9 @@ import { create } from 'zustand'
 import * as storage from '../services/storage'
 import { syncToCloud } from '../services/cloud'
 import { createDefaultChild } from '../constants'
+import { PET_TYPES, PET_ACTIONS, STAGE_THRESHOLDS } from '../constants/pets'
+import { applyTimeDecay, calcPetStage } from '../utils/petUtils'
+import type { PetActionType, Pet } from '../types'
 
 // 后台静默同步，不阻塞操作，失败不提示
 const backgroundSync = () => {
@@ -63,6 +66,9 @@ interface AppState {
   exportData: () => Promise<string>
   importData: (jsonData: string) => Promise<boolean>
   checkBadgeUnlock: (child: ChildProfile) => string[]
+  adoptPet: (petTypeId: string, petName: string) => Promise<void>
+  carePet: (actionType: PetActionType) => Promise<void>
+  syncPetDecay: () => Promise<void>
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -528,5 +534,167 @@ export const useStore = create<AppState>((set, get) => ({
     }
 
     return unlockedBadges
-  }
+  },
+
+  adoptPet: async (petTypeId: string, petName: string) => {
+    const state = get()
+    const child = state.activeChild
+    if (!child) return
+
+    if (child.pet) {
+      throw new Error('已经有宠物了，一次只能养一只哦')
+    }
+
+    const petType = PET_TYPES.find(p => p.id === petTypeId)
+    if (!petType) throw new Error('宠物类型不存在')
+
+    if (child.totalPoints < petType.price) {
+      throw new Error('积分不足')
+    }
+
+    const now = new Date().toISOString()
+    const pet: Pet = {
+      id: Date.now().toString(),
+      petTypeId,
+      name: petName,
+      stage: 'baby',
+      careCount: 0,
+      hunger: 80,
+      cleanliness: 80,
+      happiness: 80,
+      lastUpdatedAt: now,
+      adoptedAt: now,
+      careLogs: [],
+    }
+
+    const redemption = {
+      id: Date.now().toString() + '_pet',
+      rewardId: 'pet_adopt',
+      rewardTitle: `领养${petName}`,
+      rewardIcon: '🐾',
+      cost: petType.price,
+      redeemedAt: now,
+      date: now.slice(0, 10),
+    }
+
+    const updatedChild = {
+      ...child,
+      pet,
+      totalPoints: child.totalPoints - petType.price,
+      redemptions: [...child.redemptions, redemption],
+    }
+
+    await storage.updateChild(updatedChild)
+    set(s => ({
+      activeChild: updatedChild,
+      children: s.children.map(c => c.id === child.id ? updatedChild : c),
+    }))
+    backgroundSync()
+  },
+
+  carePet: async (actionType: PetActionType) => {
+    const state = get()
+    const child = state.activeChild
+    if (!child || !child.pet) throw new Error('没有宠物')
+
+    const petType = PET_TYPES.find(p => p.id === child.pet!.petTypeId)
+    if (!petType) throw new Error('宠物类型不存在')
+
+    const action = PET_ACTIONS[actionType]
+    if (child.totalPoints < action.cost) {
+      throw new Error('积分不足')
+    }
+
+    // 先应用时间衰减
+    const decayedPet = applyTimeDecay(child.pet, petType)
+
+    // 计算效果
+    const bonusMap: Record<PetActionType, number> = {
+      feed: petType.feedBonus,
+      clean: petType.cleanBonus,
+      play: petType.playBonus,
+    }
+    const effect = Math.round(action.baseEffect * bonusMap[actionType])
+
+    let updatedStats = { ...decayedPet }
+    if (actionType === 'feed') {
+      updatedStats = { ...updatedStats, hunger: Math.min(100, decayedPet.hunger + effect) }
+    } else if (actionType === 'clean') {
+      updatedStats = { ...updatedStats, cleanliness: Math.min(100, decayedPet.cleanliness + effect) }
+    } else if (actionType === 'play') {
+      updatedStats = { ...updatedStats, happiness: Math.min(100, decayedPet.happiness + effect) }
+    }
+
+    const newCareCount = decayedPet.careCount + 1
+    const newStage = calcPetStage(newCareCount)
+
+    // 追加照料日志，保留最近50条
+    const now = new Date().toISOString()
+    const careLog = {
+      id: now,
+      actionType,
+      cost: action.cost,
+      timestamp: now,
+    }
+    const careLogs = [...decayedPet.careLogs, careLog].slice(-50)
+
+    const updatedPet: Pet = {
+      ...updatedStats,
+      careCount: newCareCount,
+      stage: newStage,
+      careLogs,
+      lastUpdatedAt: now,
+    }
+
+    const redemption = {
+      id: now + '_care',
+      rewardId: `pet_care_${actionType}`,
+      rewardTitle: `${action.label}${child.pet.name}`,
+      rewardIcon: action.emoji,
+      cost: action.cost,
+      redeemedAt: now,
+      date: now.slice(0, 10),
+    }
+
+    const updatedChild = {
+      ...child,
+      pet: updatedPet,
+      totalPoints: child.totalPoints - action.cost,
+      redemptions: [...child.redemptions, redemption],
+    }
+
+    await storage.updateChild(updatedChild)
+    set(s => ({
+      activeChild: updatedChild,
+      children: s.children.map(c => c.id === child.id ? updatedChild : c),
+    }))
+    backgroundSync()
+  },
+
+  syncPetDecay: async () => {
+    const state = get()
+    const child = state.activeChild
+    if (!child || !child.pet) return
+
+    const petType = PET_TYPES.find(p => p.id === child.pet!.petTypeId)
+    if (!petType) return
+
+    const decayedPet = applyTimeDecay(child.pet, petType)
+
+    // 距上次更新超过1分钟才持久化
+    const lastUpdated = new Date(child.pet.lastUpdatedAt)
+    const now = new Date()
+    const minutesElapsed = (now.getTime() - lastUpdated.getTime()) / (1000 * 60)
+
+    const updatedChild = { ...child, pet: decayedPet }
+
+    if (minutesElapsed > 1) {
+      await storage.updateChild(updatedChild)
+    }
+
+    set(s => ({
+      activeChild: updatedChild,
+      children: s.children.map(c => c.id === child.id ? updatedChild : c),
+    }))
+  },
 }))
