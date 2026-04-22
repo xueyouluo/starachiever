@@ -1,6 +1,8 @@
+@use '../../styles/variables.scss' as *;
+
 .privacy-page {
   min-height: 100vh;
-  background: #FFF5F0;
+  background: $bg-page;
 }
 
 .scroll-view {
@@ -8,46 +10,45 @@
 }
 
 .content {
-  padding: 24px 20px 40px;
+  padding: 20px 20px 128px;
+}
+
+.title,
+.update-date,
+.section-title,
+.paragraph,
+.list-item {
+  display: block;
 }
 
 .title {
-  display: block;
-  font-size: 24px;
-  font-weight: bold;
-  color: #FF6348;
-  margin-bottom: 8px;
+  font-size: 28px;
+  font-weight: 600;
+  color: $text-color;
 }
 
 .update-date {
-  display: block;
+  margin-top: 8px;
   font-size: 13px;
-  color: #B2BEC3;
-  margin-bottom: 28px;
+  color: $text-light;
 }
 
 .section-title {
-  display: block;
   font-size: 17px;
   font-weight: 600;
-  color: #2D3436;
-  margin-top: 24px;
+  color: $text-color;
+  margin-top: 28px;
   margin-bottom: 10px;
 }
 
-.paragraph {
-  display: block;
+.paragraph,
+.list-item {
   font-size: 15px;
-  color: #636E72;
-  line-height: 1.7;
-  margin-bottom: 8px;
+  color: $text-secondary;
+  line-height: 1.8;
 }
 
 .list-item {
-  display: block;
-  font-size: 15px;
-  color: #636E72;
-  line-height: 1.7;
   padding-left: 8px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }

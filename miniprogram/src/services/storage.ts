@@ -1,4 +1,5 @@
 import Taro from '@tarojs/taro'
+import type { ChildProfile } from '../types'
 
 const STORAGE_KEY = 'starachiever_data_v6'
 
@@ -63,14 +64,6 @@ export const getActiveChild = async (): Promise<ChildProfile | null> => {
   return data.children.find(c => c.id === data.activeChildId) || null
 }
 
-export default {
-  getData,
-  setData,
-  updateChild,
-  getActiveChild,
-  setActiveChild
-}
-
 /**
  * 设置活跃孩子
  */
@@ -82,4 +75,12 @@ export const setActiveChild = async (childId: string): Promise<void> => {
     ...data,
     activeChildId: childId
   })
+}
+
+export default {
+  getData,
+  setData,
+  updateChild,
+  getActiveChild,
+  setActiveChild
 }

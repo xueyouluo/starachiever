@@ -1,5 +1,6 @@
 import { Task, Reward, Badge, ChildProfile, UserStats, Category } from './types';
 import { DEFAULT_CATEGORIES } from './constants/categories';
+import { KOALA_CATEGORIES, KOALA_TASKS } from './constants/koala';
 
 export const INITIAL_TASKS: Task[] = [
   { id: '1', title: '早起刷牙洗脸', icon: '🪥', points: 5, completed: false, color: 'bg-blue-100 text-blue-600', category: DEFAULT_CATEGORIES[1] },
@@ -94,6 +95,29 @@ export const ensureCategoryCounts = (stats: UserStats, categories: Category[]): 
     categoryCounts: updatedCategoryCounts
   };
 };
+
+export const createKoalaChild = (name: string, avatar: string = '🐨'): ChildProfile => {
+  const categories = [...KOALA_CATEGORIES]
+  const stats = ensureCategoryCounts(INITIAL_STATS, categories)
+  return {
+    id: Date.now().toString() + Math.random().toString().slice(2, 6),
+    name,
+    avatar,
+    themeColor: 'kid-blue',
+    categories,
+    tasks: [...KOALA_TASKS],
+    rewards: [...INITIAL_REWARDS],
+    badges: [...INITIAL_BADGES],
+    history: {},
+    dailyHistory: {},
+    redemptions: [],
+    totalPoints: 0,
+    currentStreak: 0,
+    lastLoginDate: new Date().toISOString().split('T')[0],
+    unlockedBadges: [],
+    stats
+  }
+}
 
 export const createDefaultChild = (name: string, avatar: string = '👶'): ChildProfile => {
   const defaultCategories = [...DEFAULT_CATEGORIES];

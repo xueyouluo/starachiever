@@ -1,39 +1,43 @@
-/* 颜色变量 — 活泼色彩系统 */
-$primary:         #FF6348;   // 珊瑚红
-$primary-light:   #FF8C6E;
-$primary-bg:      #FFF0EC;
-$amber:           #FFA502;   // 琥珀黄
-$green:           #26DE81;   // 活力绿
-$blue:            #4BCFFA;   // 天蓝
-$purple:          #A29BFE;   // 紫色
-$pink:            #FF6B9D;   // 粉红
-$bg-page:         #FFF5F0;   // 暖奶油（全局背景）
-$border-color:    #FFE0D6;   // 暖色调边框
+/* Apple-like Design Tokens */
+$primary:         #0A84FF;
+$primary-strong:  #0071E3;
+$primary-soft:    #EAF3FF;
+$secondary:       #5AC8FA;
+$secondary-strong:#32ADE6;
+$secondary-soft:  #ECF8FF;
+$accent:          #FF9F0A;
+$accent-strong:   #F08B00;
+$accent-soft:     #FFF4E5;
+$success:         #34C759;
+$warning:         #FF9F0A;
+$danger:          #FF453A;
 
-/* 各页独有渐变 */
-$gradient-primary:  linear-gradient(135deg, #FF6348 0%, #FFA502 100%);  // 任务页
-$gradient-profile:  linear-gradient(135deg, #FF6B9D 0%, #FF6348 100%);  // 个人页
-$gradient-calendar: linear-gradient(135deg, #4BCFFA 0%, #26DE81 100%);  // 日历页
-$gradient-parent:   linear-gradient(135deg, #A29BFE 0%, #4BCFFA 100%);  // 家长页
-$gradient-child:    linear-gradient(135deg, #FF6348 0%, #FF6B9D 100%);  // 选择孩子
+$bg-page:         #F2F2F7;
+$bg-page-soft:    #FAFAFC;
+$bg-card:         #FFFFFF;
+$bg-card-soft:    #F7F7FA;
+$bg-muted:        #EFEFF4;
+$border-color:    #E5E5EA;
+$border-strong:   #D1D1D6;
 
-/* 彩色阴影 */
-$shadow-card: 0 4px 20px rgba(255, 99, 72, 0.10);
+$text-color:      #1C1C1E;
+$text-secondary:  #636366;
+$text-light:      #8E8E93;
+$text-inverse:    #FFFFFF;
+
+$gradient-hero:   linear-gradient(180deg, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.32) 100%);
+$gradient-accent: linear-gradient(180deg, #0A84FF 0%, #0071E3 100%);
+$gradient-soft:   linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 1) 100%);
 
 /* 旧变量兼容（保留） */
-$primary-color:   #FF6348;
-$secondary-color: #4BCFFA;
-$success-color:   #26DE81;
-$warning-color:   #FFA502;
-$danger-color:    #FF6348;
-$info-color:      #A29BFE;
-
-$text-color:       #2D3436;
-$text-secondary:   #636E72;
-$text-light:       #B2BEC3;
-
-$bg-color:     #FFF5F0;
-$bg-white:     #FFFFFF;
+$primary-color:   $primary;
+$secondary-color: $secondary;
+$success-color:   $success;
+$warning-color:   $warning;
+$danger-color:    $danger;
+$info-color:      #9A8DCC;
+$bg-color:        $bg-page;
+$bg-white:        $bg-card;
 
 /* 间距变量 */
 $spacing-xs: 4px;
@@ -41,12 +45,14 @@ $spacing-sm: 8px;
 $spacing-md: 16px;
 $spacing-lg: 24px;
 $spacing-xl: 32px;
+$spacing-2xl: 40px;
 
 /* 圆角变量 */
-$radius-sm:   4px;
-$radius-md:   8px;
-$radius-lg:   16px;
+$radius-sm:   6px;
+$radius-md:   12px;
+$radius-lg:   18px;
 $radius-xl:   24px;
+$radius-2xl:  28px;
 $radius-full: 9999px;
 
 /* 字体大小 */
@@ -57,8 +63,10 @@ $font-lg:  18px;
 $font-xl:  20px;
 $font-2xl: 24px;
 $font-3xl: 32px;
+$font-4xl: 40px;
 
 /* 阴影 */
-$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-$shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-$shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+$shadow-sm:   0 1px 2px rgba(28, 28, 30, 0.04);
+$shadow-md:   0 8px 24px rgba(28, 28, 30, 0.06);
+$shadow-lg:   0 16px 36px rgba(28, 28, 30, 0.07);
+$shadow-card: 0 10px 28px rgba(28, 28, 30, 0.05);

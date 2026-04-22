@@ -1,57 +1,32 @@
-.select-child-page {
-  min-height: 100vh;
-  background: #FFF5F0;
-}
-
-.page-header {
-  background: linear-gradient(135deg, #FF6348, #FF6B9D);
-  padding: 40px 20px 28px;
-  position: relative;
-  overflow: hidden;
-}
-
-.page-header::before {
-  content: '';
-  position: absolute;
-  top: -20px;
-  right: -20px;
-  width: 100px;
-  height: 100px;
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 50%;
-}
-
-.page-title {
-  font-size: 24px;
-  font-weight: bold;
-  color: white;
-  position: relative;
-  z-index: 1;
-}
+@use '../../styles/variables.scss' as *;
 
 .children-list {
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .child-item {
   display: flex;
   align-items: center;
-  background: white;
-  border-radius: 20px;
+  border: none;
+  border-radius: $radius-xl;
   padding: 18px 16px;
-  margin-bottom: 16px;
-  border-left: 4px solid;
-  box-shadow: 0 4px 20px rgba(255, 99, 72, 0.10);
+  box-shadow: 0 0 0 0.5px rgba(60, 60, 67, 0.14);
+}
+
+.child-item.active {
+  box-shadow: 0 0 0 1px rgba(10, 132, 255, 0.18);
 }
 
 .child-avatar {
   width: 64px;
   height: 64px;
-  border-radius: 16px;
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
+  font-size: 34px;
   margin-right: 16px;
 }
 
@@ -59,45 +34,26 @@
   flex: 1;
 }
 
+.child-name,
+.child-points,
+.child-arrow {
+  display: block;
+}
+
 .child-name {
   font-size: 18px;
   font-weight: 600;
-  color: #2D3436;
-  display: block;
-  margin-bottom: 4px;
+  color: $text-color;
 }
 
 .child-points {
-  font-size: 14px;
-  color: #FF6348;
-  font-weight: 600;
+  margin-top: 6px;
+  font-size: 13px;
+  color: $text-secondary;
 }
 
 .child-arrow {
-  font-size: 20px;
-  color: #FFB3A7;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-}
-
-.empty-icon {
-  font-size: 60px;
-  margin-bottom: 16px;
-}
-
-.empty-text {
-  font-size: 18px;
-  color: #2D3436;
-  margin-bottom: 8px;
-}
-
-.empty-hint {
-  font-size: 14px;
-  color: #636E72;
+  font-size: 12px;
+  font-weight: 600;
+  color: $primary-strong;
 }

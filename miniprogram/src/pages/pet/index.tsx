@@ -10,8 +10,22 @@ import {
   MOOD_LABEL,
   STAGE_LABEL,
 } from '../../utils/petUtils'
+import { BRAND_COLORS } from '../../utils/colorTheme'
 import type { PetActionType, Pet, ChildProfile } from '../../types'
 import './index.scss'
+
+const getBarTone = (value: number) => {
+  if (value >= 70) {
+    return { fill: BRAND_COLORS.primary, track: '#E3F4EC' }
+  }
+  if (value >= 40) {
+    return { fill: BRAND_COLORS.secondary, track: '#EAF4FF' }
+  }
+  if (value >= 20) {
+    return { fill: BRAND_COLORS.accentStrong, track: '#FDF1E5' }
+  }
+  return { fill: BRAND_COLORS.danger, track: '#FCEDEA' }
+}
 
 export default function PetPage() {
   const { activeChild: rawActiveChild, adoptPet, carePet, syncPetDecay, init } = useStore()
@@ -22,7 +36,6 @@ export default function PetPage() {
   })
 
   useDidShow(() => {
-    // 每次进入页面时同步宠物状态衰减
     syncPetDecay()
   })
 
@@ -36,15 +49,13 @@ export default function PetPage() {
 
   const pet = activeChild.pet as Pet | undefined
 
-  // -------- 有宠物视图 --------
   if (pet) {
-    const petType = PET_TYPES.find(p => p.id === pet.petTypeId)
+    const petType = PET_TYPES.find(item => item.id === pet.petTypeId)
     if (!petType) return null
 
     const mood = getPetMood(pet)
     const petEmoji = getPetEmoji(petType, pet.stage)
 
-    // 成长进度条
     const nextThreshold = pet.stage === 'baby'
       ? STAGE_THRESHOLDS.teen
       : pet.stage === 'teen'
@@ -59,13 +70,6 @@ export default function PetPage() {
       ? 100
       : Math.min(100, ((pet.careCount - prevThreshold) / (nextThreshold - prevThreshold)) * 100)
 
-    const getBarColor = (value: number) => {
-      if (value >= 70) return '#2ED573'
-      if (value >= 40) return '#FFA502'
-      if (value >= 20) return '#FF6348'
-      return '#FF4757'
-    }
-
     const handleCare = async (actionType: PetActionType) => {
       const action = PET_ACTIONS[actionType]
       if (activeChild.totalPoints < action.cost) {
@@ -77,7 +81,7 @@ export default function PetPage() {
         title: `${action.emoji} ${action.label}`,
         content: `花费 ${action.cost} 积分给 ${pet.name} ${action.label}？`,
         confirmText: '确认',
-        confirmColor: '#FF6348',
+        confirmColor: BRAND_COLORS.primary,
       })
       if (!res.confirm) return
 
@@ -90,53 +94,55 @@ export default function PetPage() {
     }
 
     return (
-      <View className='pet-page'>
-        {/* 顶部积分栏 */}
-        <View className='pet-header'>
-          <Text className='header-title'>🐾 我的宠物</Text>
-          <Text className='header-points'>⭐ {activeChild.totalPoints}</Text>
+      <View className='pet-page page-shell'>
+        <View className='page-hero pet-hero'>
+          <Text className='hero-overline'>宠物伙伴</Text>
+          <Text className='hero-title'>{pet.name}</Text>
+          <Text className='hero-subtitle'>{MOOD_LABEL[mood]}，继续照料就会慢慢长大。</Text>
+
+          <View className='pet-hero-emoji'>
+            <Text className='pet-emoji-big'>{petEmoji}</Text>
+          </View>
+
+          <View className='hero-chip-row'>
+            <Text className='hero-chip strong'>{MOOD_EMOJI[mood]} {MOOD_LABEL[mood]}</Text>
+            <Text className='hero-chip'>{STAGE_LABEL[pet.stage]}</Text>
+            <Text className='hero-chip warm'>积分 {activeChild.totalPoints}</Text>
+          </View>
         </View>
 
-        <ScrollView scrollY className='scroll-area'>
-          {/* 宠物展示区 */}
-          <View className='pet-showcase'>
-            <Text className='pet-emoji-big bounce'>{petEmoji}</Text>
-            <View className='pet-mood-row'>
-              <Text className='pet-mood-emoji'>{MOOD_EMOJI[mood]}</Text>
-              <Text className='pet-mood-label'>{MOOD_LABEL[mood]}</Text>
+        <ScrollView scrollY className='page-scroll pet-scroll'>
+          <View className='section-card pet-section'>
+            <View className='section-card-header'>
+              <Text className='section-title'>宠物状态</Text>
+              <Text className='section-note'>实时变化</Text>
             </View>
-            <View className='pet-name-row'>
-              <Text className='pet-name'>{pet.name}</Text>
-              <View className='pet-stage-badge'>
-                <Text className='pet-stage-text'>{STAGE_LABEL[pet.stage]}</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* 属性条 */}
-          <View className='stats-card'>
-            <Text className='stats-title'>宠物状态</Text>
             {[
-              { label: '🍖 饱食度', value: pet.hunger },
-              { label: '🛁 清洁度', value: pet.cleanliness },
-              { label: '🎾 快乐度', value: pet.happiness },
-            ].map(stat => (
-              <View key={stat.label} className='stat-row'>
-                <Text className='stat-label'>{stat.label}</Text>
-                <View className='stat-bar-bg'>
-                  <View
-                    className='stat-bar-fill'
-                    style={{ width: `${stat.value}%`, backgroundColor: getBarColor(stat.value) }}
-                  />
+              { label: '饱食度', value: pet.hunger },
+              { label: '清洁度', value: pet.cleanliness },
+              { label: '快乐度', value: pet.happiness },
+            ].map(stat => {
+              const tone = getBarTone(stat.value)
+              return (
+                <View key={stat.label} className='stat-row'>
+                  <Text className='stat-label'>{stat.label}</Text>
+                  <View className='stat-bar-bg' style={{ backgroundColor: tone.track }}>
+                    <View
+                      className='stat-bar-fill'
+                      style={{ width: `${stat.value}%`, backgroundColor: tone.fill }}
+                    />
+                  </View>
+                  <Text className='stat-value'>{stat.value}</Text>
                 </View>
-                <Text className='stat-value'>{stat.value}</Text>
-              </View>
-            ))}
+              )
+            })}
           </View>
 
-          {/* 操作区 */}
-          <View className='actions-card'>
-            <Text className='actions-title'>照料宠物</Text>
+          <View className='section-card pet-section'>
+            <View className='section-card-header'>
+              <Text className='section-title'>照料动作</Text>
+              <Text className='section-note'>会消耗积分</Text>
+            </View>
             <View className='actions-row'>
               {(Object.entries(PET_ACTIONS) as [PetActionType, typeof PET_ACTIONS[PetActionType]][]).map(([type, action]) => {
                 const canAfford = activeChild.totalPoints >= action.cost
@@ -148,16 +154,18 @@ export default function PetPage() {
                   >
                     <Text className='action-emoji'>{action.emoji}</Text>
                     <Text className='action-label'>{action.label}</Text>
-                    <Text className='action-cost'>-{action.cost}⭐</Text>
+                    <Text className='action-cost'>-{action.cost} 分</Text>
                   </View>
                 )
               })}
             </View>
           </View>
 
-          {/* 成长进度 */}
-          <View className='growth-card'>
-            <Text className='growth-title'>成长历程</Text>
+          <View className='section-card pet-section'>
+            <View className='section-card-header'>
+              <Text className='section-title'>成长历程</Text>
+              <Text className='section-note'>{pet.careCount} 次照料</Text>
+            </View>
             <View className='growth-stages'>
               <Text className={`growth-stage ${pet.stage === 'baby' ? 'active' : ''}`}>幼崽</Text>
               <View className='growth-line'>
@@ -171,8 +179,8 @@ export default function PetPage() {
             </View>
             <Text className='growth-count'>
               {pet.stage === 'adult'
-                ? `已照料 ${pet.careCount} 次，已成年 🎉`
-                : `还需照料 ${nextThreshold - pet.careCount} 次升级`}
+                ? `已照料 ${pet.careCount} 次，现在已经成年。`
+                : `还需照料 ${nextThreshold - pet.careCount} 次升级。`}
             </Text>
           </View>
         </ScrollView>
@@ -180,7 +188,6 @@ export default function PetPage() {
     )
   }
 
-  // -------- 无宠物（商店）视图 --------
   const handleAdopt = async (petTypeId: string) => {
     const petType = PET_TYPES.find(p => p.id === petTypeId)
     if (!petType) return
@@ -196,7 +203,7 @@ export default function PetPage() {
       editable: true,
       placeholderText: petType.name,
       confirmText: '领养',
-      confirmColor: '#FF6348',
+      confirmColor: BRAND_COLORS.primary,
     })
 
     if (!nameRes.confirm) return
@@ -204,27 +211,42 @@ export default function PetPage() {
 
     try {
       await adoptPet(petTypeId, petName)
-      Taro.showToast({ title: `🎉 成功领养了 ${petName}！`, icon: 'none', duration: 2500 })
+      Taro.showToast({ title: `成功领养了 ${petName}！`, icon: 'none', duration: 2500 })
     } catch (e: any) {
       Taro.showToast({ title: e?.message || '领养失败', icon: 'none' })
     }
   }
 
   return (
-    <View className='pet-page'>
-      {/* 顶部积分栏 */}
-      <View className='pet-header'>
-        <Text className='header-title'>🐾 宠物商店</Text>
-        <Text className='header-points'>⭐ {activeChild.totalPoints}</Text>
+    <View className='pet-page page-shell'>
+      <View className='page-hero pet-hero'>
+        <Text className='hero-overline'>宠物商店</Text>
+        <Text className='hero-title'>挑选新伙伴</Text>
+        <Text className='hero-subtitle'>攒够积分后，就能把喜欢的宠物带回家慢慢照料。</Text>
+
+        <View className='summary-grid'>
+          <View className='summary-item'>
+            <Text className='summary-value'>{PET_TYPES.length}</Text>
+            <Text className='summary-label'>可选伙伴</Text>
+          </View>
+          <View className='summary-item'>
+            <Text className='summary-value'>{activeChild.totalPoints}</Text>
+            <Text className='summary-label'>当前积分</Text>
+          </View>
+          <View className='summary-item'>
+            <Text className='summary-value'>{PET_TYPES.filter(p => activeChild.totalPoints >= p.price).length}</Text>
+            <Text className='summary-label'>可领养</Text>
+          </View>
+        </View>
       </View>
 
-      <ScrollView scrollY className='scroll-area'>
-        <Text className='shop-hint'>选一只宠物来照料吧！</Text>
+      <ScrollView scrollY className='page-scroll pet-scroll'>
+        <Text className='shop-hint'>选一只喜欢的宠物，之后就能在这里持续照料它。</Text>
         <View className='shop-list'>
           {PET_TYPES.map(p => {
             const canAfford = activeChild.totalPoints >= p.price
             return (
-              <View key={p.id} className='shop-card'>
+              <View key={p.id} className='section-card shop-card'>
                 <Text className='shop-pet-emoji'>{p.emoji[0]}</Text>
                 <View className='shop-pet-info'>
                   <Text className='shop-pet-name'>{p.name}</Text>
@@ -232,13 +254,13 @@ export default function PetPage() {
                   <Text className='shop-pet-special'>{p.speciality}</Text>
                 </View>
                 <View className='shop-adopt-wrap'>
-                  <Text className={`shop-price ${canAfford ? '' : 'unaffordable'}`}>⭐ {p.price}</Text>
+                  <Text className={`shop-price ${canAfford ? '' : 'unaffordable'}`}>{p.price} 分</Text>
                   <View
                     className={`shop-adopt-btn ${canAfford ? 'active' : 'disabled'}`}
-                    onClick={() => handleAdopt(p.id)}
+                    onClick={() => canAfford && handleAdopt(p.id)}
                   >
                     <Text className='shop-adopt-text'>
-                      {canAfford ? '领养' : `差${p.price - activeChild.totalPoints}分`}
+                      {canAfford ? '领养' : '积分不足'}
                     </Text>
                   </View>
                 </View>

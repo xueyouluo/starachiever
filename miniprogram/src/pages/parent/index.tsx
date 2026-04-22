@@ -2,7 +2,7 @@ import { View, Text, ScrollView, Input } from '@tarojs/components'
 import { useState } from 'react'
 import Taro, { useLoad } from '@tarojs/taro'
 import { useStore } from '../../store'
-import { createDefaultChild } from '../../constants'
+import { createDefaultChild, createKoalaChild } from '../../constants'
 import { DEFAULT_CATEGORIES } from '../../constants/categories'
 import { syncToCloud, restoreFromCloud } from '../../services/cloud'
 import { getData } from '../../services/storage'
@@ -101,26 +101,50 @@ export default function ParentPage() {
           const name = res.content.trim()
           if (!name) return
 
-          const boyAvatars = ['👦', '🧒', '👶']
-          const girlAvatars = ['👧', '👧‍🦱', '🧒‍♀️']
-
+          // 选择模板
           Taro.showActionSheet({
-            itemList: ['👦 男孩', '👧 女孩'],
-            success: (genderRes) => {
-              const avatars = genderRes.tapIndex === 0 ? boyAvatars : girlAvatars
-              const label = genderRes.tapIndex === 0 ? '男孩' : '女孩'
-              Taro.showActionSheet({
-                itemList: avatars.map(a => `${a} ${label}`),
-                success: async (avatarRes) => {
-                  const selectedAvatar = avatars[avatarRes.tapIndex]
-                  const newChild = createDefaultChild(name, selectedAvatar)
-                  await addChild(newChild)
-                  setSelectedChildId(newChild.id)
-                  setActiveChild(newChild)
-                  Taro.showToast({ title: '添加成功', icon: 'success' })
-                },
-                fail: () => {}
-              })
+            itemList: ['🐨 考拉模板（完整打卡任务）', '👶 默认模板（基础任务）'],
+            success: (templateRes) => {
+              const useKoala = templateRes.tapIndex === 0
+
+              const boyAvatars = useKoala ? ['🐨'] : ['👦', '🧒', '👶']
+              const girlAvatars = useKoala ? ['🐨'] : ['👧', '👧‍🦱', '🧒‍♀️']
+
+              if (useKoala) {
+                Taro.showActionSheet({
+                  itemList: ['👦 男孩', '👧 女孩'],
+                  success: async (genderRes) => {
+                    const avatar = '🐨'
+                    const newChild = createKoalaChild(name, avatar)
+                    await addChild(newChild)
+                    setSelectedChildId(newChild.id)
+                    setActiveChild(newChild)
+                    Taro.showToast({ title: '添加成功', icon: 'success' })
+                  },
+                  fail: () => {}
+                })
+              } else {
+                Taro.showActionSheet({
+                  itemList: ['👦 男孩', '👧 女孩'],
+                  success: (genderRes) => {
+                    const avatars = genderRes.tapIndex === 0 ? boyAvatars : girlAvatars
+                    const label = genderRes.tapIndex === 0 ? '男孩' : '女孩'
+                    Taro.showActionSheet({
+                      itemList: avatars.map(a => `${a} ${label}`),
+                      success: async (avatarRes) => {
+                        const selectedAvatar = avatars[avatarRes.tapIndex]
+                        const newChild = createDefaultChild(name, selectedAvatar)
+                        await addChild(newChild)
+                        setSelectedChildId(newChild.id)
+                        setActiveChild(newChild)
+                        Taro.showToast({ title: '添加成功', icon: 'success' })
+                      },
+                      fail: () => {}
+                    })
+                  },
+                  fail: () => {}
+                })
+              }
             },
             fail: () => {}
           })
@@ -412,13 +436,18 @@ export default function ParentPage() {
     try {
       Taro.showLoading({ title: '同步中...', mask: true })
       const data = await getData()
-      if (!data) throw new Error('无数据')
+      if (!data) throw new Error('本地无数据可同步')
       await syncToCloud(data)
       Taro.hideLoading()
       Taro.showToast({ title: '同步成功', icon: 'success' })
-    } catch (e) {
+    } catch (e: any) {
       Taro.hideLoading()
-      Taro.showToast({ title: '同步失败，请检查网络', icon: 'none' })
+      Taro.showModal({
+        title: '同步失败',
+        content: e?.message || e?.errMsg || String(e) || '未知错误',
+        showCancel: false,
+        confirmText: '知道了'
+      })
     }
   }
 
@@ -433,14 +462,24 @@ export default function ParentPage() {
           const cloudData = await restoreFromCloud()
           Taro.hideLoading()
           if (!cloudData) {
-            Taro.showToast({ title: '云端暂无数据', icon: 'none' })
+            Taro.showModal({
+              title: '云端暂无数据',
+              content: '未找到你的云端备份，请先同步一次数据',
+              showCancel: false,
+              confirmText: '知道了'
+            })
             return
           }
           const success = await importData(JSON.stringify(cloudData))
           Taro.showToast({ title: success ? '恢复成功' : '数据格式错误', icon: success ? 'success' : 'none' })
-        } catch (e) {
+        } catch (e: any) {
           Taro.hideLoading()
-          Taro.showToast({ title: '恢复失败，请检查网络', icon: 'none' })
+          Taro.showModal({
+            title: '恢复失败',
+            content: e?.message || e?.errMsg || String(e) || '未知错误',
+            showCancel: false,
+            confirmText: '知道了'
+          })
         }
       }
     })
@@ -450,21 +489,23 @@ export default function ParentPage() {
     return (
       <View className='parent-page'>
         <View className='auth-container'>
-          <Text className='auth-title'>家长模式</Text>
-          <Text className='auth-subtitle'>请输入密码进入</Text>
+          <View className='auth-card'>
+            <Text className='auth-title'>家长模式</Text>
+            <Text className='auth-subtitle'>输入 4 位密码后，可以管理孩子、任务、奖励和云端数据。</Text>
 
-          <View className='password-input'>
-            <Input
-              type='password'
-              value={password}
-              onInput={(e) => setPassword(e.detail.value)}
-              placeholder='请输入4位密码'
-              maxlength={4}
-            />
-          </View>
+            <View className='password-input'>
+              <Input
+                type='password'
+                value={password}
+                onInput={(e) => setPassword(e.detail.value)}
+                placeholder='请输入4位密码'
+                maxlength={4}
+              />
+            </View>
 
-          <View className='auth-btn' onClick={verifyPassword}>
-            <Text>确认</Text>
+            <View className='auth-btn' onClick={verifyPassword}>
+              <Text>确认进入</Text>
+            </View>
           </View>
         </View>
       </View>
@@ -475,6 +516,18 @@ export default function ParentPage() {
 
   return (
     <View className='parent-page'>
+      <View className='parent-layout'>
+        <View className='page-hero parent-hero'>
+          <Text className='hero-overline'>家长管理</Text>
+          <Text className='hero-title'>家长模式</Text>
+          <Text className='hero-subtitle'>管理孩子档案、任务、奖励、分类和云端数据，不改变原有业务逻辑。</Text>
+
+          <View className='hero-chip-row'>
+            <Text className='hero-chip strong'>{children.length} 个孩子档案</Text>
+            <Text className='hero-chip'>{currentTab === 'members' ? '成员管理' : '内容管理'}</Text>
+          </View>
+        </View>
+
       {/* Tab 导航 */}
       <View className='tab-bar'>
         <View className={`tab-item ${currentTab === 'members' ? 'active' : ''}`} onClick={() => setCurrentTab('members')}>
@@ -497,7 +550,7 @@ export default function ParentPage() {
       {/* 孩子选择器（任务、奖励和分类页面显示） */}
       {(currentTab === 'tasks' || currentTab === 'rewards' || currentTab === 'categories') && (
         <View className='child-selector'>
-          <Text className='selector-label'>管理对象：</Text>
+          <Text className='selector-label'>管理对象</Text>
           <ScrollView scrollX className='selector-scroll'>
             <View className='selector-list'>
               {children.map(child => (
@@ -526,8 +579,8 @@ export default function ParentPage() {
                   <Text className='member-avatar'>{child.avatar}</Text>
                   <View className='member-details'>
                     <Text className='member-name'>{child.name}</Text>
-                    <Text className='member-points'>💎 {child.totalPoints} 积分</Text>
-                    <Text className='member-tasks'>✅ {child.tasks.filter(t => t.completed).length}/{child.tasks.length} 任务</Text>
+                    <Text className='member-points'>{child.totalPoints} 积分</Text>
+                    <Text className='member-tasks'>已完成 {child.tasks.filter(t => t.completed).length}/{child.tasks.length} 个任务</Text>
                   </View>
                 </View>
                 <View className='member-actions'>
@@ -656,7 +709,7 @@ export default function ParentPage() {
                       <Text className='item-icon'>{reward.icon}</Text>
                       <View className='item-details'>
                         <Text className='item-title'>{reward.title}</Text>
-                        <Text className='item-meta'>💎 {reward.cost} 积分</Text>
+                        <Text className='item-meta'>{reward.cost} 积分</Text>
                       </View>
                     </View>
                     <Text className='delete-btn' onClick={() => handleDeleteReward(reward.id)}>删除</Text>
@@ -735,7 +788,7 @@ export default function ParentPage() {
             <Text className='section-title'>数据管理</Text>
 
             <View className='data-card'>
-              <Text className='data-title'>☁️ 同步到云端</Text>
+              <Text className='data-title'>同步到云端</Text>
               <Text className='data-desc'>将本地数据备份到微信云端</Text>
               <Text className='data-desc-small'>使用微信账号自动识别，无需注册登录</Text>
               <View className='data-btn cloud' onClick={handleSyncToCloud}>
@@ -744,7 +797,7 @@ export default function ParentPage() {
             </View>
 
             <View className='data-card'>
-              <Text className='data-title'>☁️ 从云端恢复</Text>
+              <Text className='data-title'>从云端恢复</Text>
               <Text className='data-desc'>将云端数据恢复到本机</Text>
               <Text className='data-desc-small'>更换设备后可用此功能迁移数据</Text>
               <View className='data-btn cloud-restore' onClick={handleRestoreFromCloud}>
@@ -766,6 +819,7 @@ export default function ParentPage() {
           </View>
         )}
       </ScrollView>
+      </View>
     </View>
   )
 }

@@ -1,0 +1,214 @@
+@use './variables.scss' as *;
+
+.page-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 20px 128px;
+  background: $bg-page;
+}
+
+.page-scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.page-hero {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 6px 2px 2px;
+  position: relative;
+  overflow: visible;
+}
+
+.hero-overline,
+.hero-title,
+.hero-subtitle,
+.hero-chip,
+.summary-label,
+.summary-value,
+.section-title,
+.section-note,
+.empty-title,
+.empty-text {
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-overline {
+  font-size: 13px;
+  font-weight: 500;
+  color: $text-light;
+  margin-bottom: 6px;
+}
+
+.hero-title {
+  font-size: 34px;
+  line-height: 1.18;
+  font-weight: 700;
+  color: $text-color;
+}
+
+.hero-subtitle {
+  margin-top: 6px;
+  font-size: $font-sm;
+  line-height: 1.6;
+  color: $text-secondary;
+}
+
+.hero-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-chip,
+.info-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: $radius-full;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 0.5px rgba(60, 60, 67, 0.16);
+  color: $text-secondary;
+}
+
+.hero-chip.strong,
+.info-chip.strong {
+  background: rgba(10, 132, 255, 0.1);
+  color: $primary-strong;
+}
+
+.hero-chip.warm,
+.info-chip.warm {
+  background: rgba(255, 159, 10, 0.12);
+  color: $accent-strong;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.summary-item {
+  background: rgba(255, 255, 255, 0.94);
+  border: none;
+  border-radius: $radius-lg;
+  box-shadow: 0 0 0 0.5px rgba(60, 60, 67, 0.18);
+  padding: 14px 12px;
+}
+
+.summary-value {
+  font-size: 22px;
+  font-weight: 600;
+  color: $text-color;
+}
+
+.summary-label {
+  margin-top: 4px;
+  font-size: 12px;
+  color: $text-secondary;
+}
+
+.section-card {
+  background: $bg-card;
+  border: none;
+  border-radius: $radius-xl;
+  box-shadow: 0 0 0 0.5px rgba(60, 60, 67, 0.16);
+  padding: 18px 16px;
+}
+
+.section-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.section-title {
+  font-size: $font-lg;
+  font-weight: 600;
+  color: $text-color;
+}
+
+.section-note {
+  font-size: 12px;
+  color: $text-light;
+}
+
+.primary-button,
+.secondary-button,
+.danger-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  border-radius: $radius-lg;
+  font-size: $font-sm;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.primary-button {
+  background: $gradient-accent;
+  color: $text-inverse;
+}
+
+.secondary-button {
+  background: $bg-card-soft;
+  border: none;
+  color: $text-color;
+}
+
+.danger-button {
+  background: rgba(255, 69, 58, 0.1);
+  color: $danger;
+}
+
+.empty-panel {
+  background: $bg-card;
+  border: none;
+  border-radius: $radius-xl;
+  box-shadow: 0 0 0 0.5px rgba(60, 60, 67, 0.16);
+  padding: 24px 18px;
+  text-align: center;
+}
+
+.empty-title {
+  font-size: $font-lg;
+  font-weight: 600;
+  color: $text-color;
+}
+
+.empty-text {
+  margin-top: 8px;
+  font-size: $font-sm;
+  line-height: 1.7;
+  color: $text-secondary;
+}
+
+.loading-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $text-secondary;
+  font-size: $font-md;
+}

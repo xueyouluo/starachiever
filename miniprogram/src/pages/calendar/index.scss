@@ -1,135 +1,86 @@
-.calendar-page {
-  min-height: 100vh;
-  background: #FFF5F0;
+@use '../../styles/variables.scss' as *;
+
+.stats-card {
+  margin-top: -4px;
 }
 
-/* 渐变头部 */
-.cal-header {
-  background: linear-gradient(135deg, #4BCFFA 0%, #26DE81 100%);
-  padding: 40px 20px 28px;
+.stats-title,
+.stats-hint,
+.month-title,
+.legend-text,
+.day-marker {
+  display: block;
+}
+
+.stats-title {
+  font-size: $font-sm;
+  color: $text-secondary;
+}
+
+.stats-content {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  overflow: hidden;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 8px;
 }
 
-.cal-header::before {
-  content: '';
-  position: absolute;
-  top: -20px;
-  right: -20px;
-  width: 100px;
-  height: 100px;
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 50%;
+.stats-count {
+  font-size: $font-4xl;
+  line-height: 1;
+  font-weight: 600;
+  color: $secondary-strong;
 }
 
-.cal-header-title {
-  font-size: 24px;
-  font-weight: bold;
-  color: white;
-  display: block;
-  margin-bottom: 4px;
+.stats-unit {
+  font-size: $font-lg;
+  color: $text-secondary;
 }
 
-.cal-header-sub {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.85);
-  display: block;
+.stats-hint {
+  margin-top: 10px;
+  font-size: $font-sm;
+  line-height: 1.6;
+  color: $text-secondary;
 }
 
-.content-wrapper {
-  padding: 20px;
+.calendar-shell {
+  padding-bottom: 14px;
 }
 
 .month-nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 0 10px;
+  margin-bottom: 18px;
 }
 
 .nav-btn {
   width: 40px;
   height: 40px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  border-radius: 10px;
-  font-size: 20px;
-  color: #FF6348;
-  box-shadow: 0 2px 8px rgba(255, 99, 72, 0.12);
+  background: $bg-card-soft;
+  border: none;
+  box-shadow: 0 0 0 0.5px rgba(60, 60, 67, 0.16);
+  color: $primary-strong;
+  font-size: 18px;
 }
 
 .month-title {
-  font-size: 18px;
+  font-size: $font-lg;
   font-weight: 600;
-  color: #2D3436;
-}
-
-.stats-card {
-  background: white;
-  border-radius: 20px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 20px rgba(75, 207, 250, 0.12);
-  border-left: 4px solid #4BCFFA;
-}
-
-.stats-title {
-  font-size: 14px;
-  color: #636E72;
-  display: block;
-  margin-bottom: 8px;
-}
-
-.stats-content {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-}
-
-.stats-count {
-  font-size: 48px;
-  font-weight: bold;
-  color: #4BCFFA;
-}
-
-.stats-divider {
-  display: none;
-}
-
-.stats-total {
-  display: none;
-}
-
-.stats-unit {
-  font-size: 20px;
-  color: #636E72;
-  margin-left: 8px;
-}
-
-.stats-hint {
-  font-size: 14px;
-  color: #636E72;
-  margin-top: 8px;
-  display: block;
+  color: $text-color;
 }
 
 .calendar-container {
-  background: white;
-  border-radius: 20px;
-  padding: 16px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 20px rgba(255, 99, 72, 0.06);
+  padding-top: 4px;
 }
 
 .week-header {
   display: flex;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .week-day {
@@ -140,7 +91,7 @@
 
 .week-day text {
   font-size: 12px;
-  color: #FF6348;
+  color: $text-secondary;
   font-weight: 600;
 }
 
@@ -157,149 +108,123 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  border-radius: 12px;
+  border-radius: 14px;
   margin-bottom: 8px;
-  border: 2px solid transparent;
-  background: white;
-  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  background: transparent;
 }
 
 .calendar-day.empty {
   background: transparent;
 }
 
-/* 打卡（1+）：粉→珊瑚 */
 .calendar-day.normal {
-  background: linear-gradient(135deg, #FF6B9D, #FF6348);
-  color: white;
-  border-color: transparent;
-  opacity: 0.85;
+  background: $accent-soft;
+  border-color: rgba(244, 178, 122, 0.26);
 }
 
-/* 表现棒（3+）：天蓝→绿 */
 .calendar-day.good {
-  background: linear-gradient(135deg, #4BCFFA, #26DE81);
-  color: white;
-  border-color: transparent;
+  background: $secondary-soft;
+  border-color: rgba(125, 175, 220, 0.22);
 }
 
-/* 超级棒（5+）：琥珀→珊瑚 */
 .calendar-day.excellent {
-  background: linear-gradient(135deg, #FFA502, #FF6348);
-  color: white;
-  border-color: transparent;
-  box-shadow: 0 4px 12px rgba(255, 99, 72, 0.3);
+  background: $primary;
+  border-color: rgba(75, 175, 149, 0.16);
 }
 
 .calendar-day.today {
-  border-color: #FF6348;
-  box-shadow: 0 0 0 3px rgba(255, 99, 72, 0.2);
-}
-
-.calendar-day.today .day-number {
-  font-weight: bold;
+  box-shadow: 0 0 0 2px rgba(75, 175, 149, 0.22);
 }
 
 .day-number {
   font-size: 14px;
-  color: #2D3436;
   line-height: 1;
+  color: $text-color;
 }
 
-.calendar-day.normal .day-number,
-.calendar-day.good .day-number,
 .calendar-day.excellent .day-number {
-  color: white;
+  color: $text-inverse;
+}
+
+.calendar-day.good .day-number,
+.calendar-day.normal .day-number {
+  font-weight: 600;
 }
 
 .day-indicator {
   position: absolute;
-  bottom: 4px;
+  bottom: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.star {
+.day-marker {
   font-size: 10px;
+  font-weight: 600;
+  color: inherit;
+}
+
+.calendar-day.normal .day-marker,
+.calendar-day.good .day-marker {
+  color: $text-secondary;
+}
+
+.calendar-day.excellent .day-marker {
+  color: $text-inverse;
 }
 
 .dot {
   width: 6px;
   height: 6px;
-  background: white;
   border-radius: 50%;
-  opacity: 0.8;
+  background: rgba(46, 67, 64, 0.32);
 }
 
-.streak-card {
-  margin-top: 20px;
-  background: linear-gradient(135deg, #FF6348, #FFA502);
-  border-radius: 20px;
+.legend-card {
   padding: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  box-shadow: 0 4px 16px rgba(255, 99, 72, 0.25);
-}
-
-.streak-icon {
-  font-size: 24px;
-}
-
-.streak-text {
-  font-size: 16px;
-  font-weight: 600;
-  color: white;
-}
-
-.loading-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
 }
 
 .legend {
   display: flex;
-  justify-content: center;
   gap: 16px;
-  margin-top: 20px;
   flex-wrap: wrap;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .legend-dot {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 10px;
+  font-weight: 600;
 }
 
 .legend-dot.normal {
-  background: linear-gradient(135deg, #FF6B9D, #FF6348);
-  opacity: 0.85;
+  background: $accent-soft;
+  color: $accent-strong;
 }
 
 .legend-dot.good {
-  background: linear-gradient(135deg, #4BCFFA, #26DE81);
+  background: $secondary-soft;
+  color: $secondary-strong;
 }
 
 .legend-dot.excellent {
-  background: linear-gradient(135deg, #FFA502, #FF6348);
+  background: $primary-soft;
+  color: $primary-strong;
 }
 
 .legend-text {
-  font-size: 13px;
-  color: #636E72;
-  font-weight: 500;
+  font-size: 12px;
+  color: $text-secondary;
 }

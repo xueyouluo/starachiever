@@ -1,123 +1,109 @@
+@use '../styles/variables.scss' as *;
+
 .task-card {
-  display: flex;
-  align-items: center;
-  background: #FFFFFF;
-  border-left: 4px solid #FF6348;
-  border-radius: 16px;
-  padding: 14px 16px;
+  border: none;
+  border-radius: $radius-xl;
+  padding: 16px;
   margin-bottom: 12px;
-  box-shadow: 0 4px 20px rgba(255, 99, 72, 0.08);
-  transition: all 0.3s ease;
+  box-shadow: 0 0 0 0.5px rgba(60, 60, 67, 0.14);
+  transition: transform 0.24s ease, opacity 0.24s ease, box-shadow 0.24s ease;
   width: 100%;
   max-width: 100%;
-  box-sizing: border-box;
   overflow: hidden;
-  position: relative;
+}
+
+.task-card:active {
+  transform: scale(0.99);
 }
 
 .task-card.animating {
-  transform: scale(0.95);
-  opacity: 0.7;
+  transform: scale(0.97);
+  opacity: 0.82;
 }
 
 .task-card.completed {
-  opacity: 0.65;
-  background: #FAFAFA !important;
-  border-left-color: #D1D5DB !important;
   box-shadow: none;
 }
 
-.task-card.completed .task-title {
-  text-decoration: line-through;
-  color: #B2BEC3;
+.task-card-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .task-icon {
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  border-radius: 12px;
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
-  margin-right: 12px;
+  font-size: 26px;
   flex-shrink: 0;
 }
 
 .task-content {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  margin-right: 8px;
 }
 
 .task-title {
   font-size: 16px;
   font-weight: 600;
-  color: #2D3436;
+  color: $text-color;
   display: block;
-  margin-bottom: 6px;
+  line-height: 1.35;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
+}
+
+.task-card.completed .task-title {
+  color: $text-light;
 }
 
 .task-meta {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
-  overflow: hidden;
+  margin-top: 8px;
 }
 
-.task-points {
+.task-points,
+.task-category-badge {
+  padding: 5px 10px;
+  border-radius: $radius-full;
   font-size: 12px;
-  font-weight: 700;
-  color: white;
-  background: linear-gradient(135deg, #FF6348, #FFA502);
-  padding: 2px 8px;
-  border-radius: 20px;
-  flex-shrink: 0;
-}
-
-.task-card.completed .task-points {
-  background: #D1D5DB;
+  font-weight: 500;
+  line-height: 1;
+  max-width: 100%;
 }
 
 .task-category-badge {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-status {
+  min-width: 58px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: $radius-full;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.task-status.completed {
+  background: $primary-soft;
+  color: $primary-strong;
+}
+
+.task-status-text {
   font-size: 12px;
-  color: #636E72;
-  background: #F0F0F0;
-  padding: 2px 6px;
-  border-radius: 4px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-}
-
-.check-badge {
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  background: linear-gradient(135deg, #26DE81, #4BCFFA);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-left: 6px;
-}
-
-/* 覆盖 inline style 中传入的 backgroundColor，统一使用渐变 */
-.check-badge[style*="background"] {
-  background: linear-gradient(135deg, #26DE81, #4BCFFA) !important;
-}
-
-.check-icon {
-  color: white;
-  font-size: 16px;
-  font-weight: bold;
+  font-weight: 600;
 }

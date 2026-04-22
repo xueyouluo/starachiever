@@ -30,14 +30,10 @@ export const syncToCloud = async (data: StorageData): Promise<void> => {
       return
     }
 
-    // 获取用户 openid
-    const { result } = await Taro.cloud.callFunction({
-      name: 'login'
-    })
-
+    const { result } = await Taro.cloud.callFunction({ name: 'login' })
     const openid = (result as any).openid
+    if (!openid) throw new Error('获取 openid 失败')
 
-    // 保存到云数据库
     const db = Taro.cloud.database()
     await db.collection('users').doc(openid).set({
       data: {
@@ -63,16 +59,12 @@ export const restoreFromCloud = async (): Promise<StorageData | null> => {
       return null
     }
 
-    // 获取用户 openid
-    const { result } = await Taro.cloud.callFunction({
-      name: 'login'
-    })
-
+    const { result } = await Taro.cloud.callFunction({ name: 'login' })
     const openid = (result as any).openid
+    if (!openid) return null
 
-    // 从云数据库获取数据
     const db = Taro.cloud.database()
-    const { data: cloudData } = await db.collection('users').doc(openid).get()
+    const { data: cloudData } = await (db.collection('users').doc(openid) as any).get()
 
     if (!cloudData) {
       console.log('云端无数据')

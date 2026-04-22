@@ -1,16 +1,38 @@
-/* 全局样式 */
+@use './styles/variables.scss' as *;
+@use './styles/shared.scss';
+
 page {
-  background-color: #FFF5F0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  background-color: $bg-page;
+  color: $text-color;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC',
+    'Hiragino Sans GB', 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   width: 100%;
   overflow-x: hidden;
 }
 
-page, view, text, image, button {
+page,
+view,
+text,
+image,
+button,
+scroll-view,
+input {
   box-sizing: border-box;
+}
+
+text {
+  color: inherit;
+}
+
+button {
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+button::after {
+  border: none;
 }
 
 .container {

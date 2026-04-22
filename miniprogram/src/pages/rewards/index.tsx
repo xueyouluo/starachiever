@@ -2,21 +2,9 @@ import { View, Text, ScrollView } from '@tarojs/components'
 import { useLoad } from '@tarojs/taro'
 import Taro from '@tarojs/taro'
 import { useStore } from '../../store'
+import { BRAND_COLORS, getSoftPalette } from '../../utils/colorTheme'
+import type { Reward } from '../../types'
 import './index.scss'
-
-// 将 Tailwind 类名映射为背景色
-const getBgColor = (colorClass: string): string => {
-  const map: Record<string, string> = {
-    'bg-pink-100 text-pink-600':     '#FCE7F3',
-    'bg-green-100 text-green-600':   '#D1FAE5',
-    'bg-blue-100 text-blue-600':     '#DBEAFE',
-    'bg-yellow-100 text-yellow-600': '#FEF3C7',
-    'bg-purple-100 text-purple-600': '#EDE9FE',
-    'bg-red-100 text-red-600':       '#FEE2E2',
-    'bg-orange-100 text-orange-600': '#FFEDD5',
-  }
-  return map[colorClass] || '#FFF0EC'
-}
 
 export default function RewardsPage() {
   const { activeChild, redeemReward, init } = useStore()
@@ -43,7 +31,7 @@ export default function RewardsPage() {
       title: '确认兑换',
       content: `花费 ${reward.cost} 积分兑换「${reward.title}」？`,
       confirmText: '兑换',
-      confirmColor: '#FF6348'
+      confirmColor: BRAND_COLORS.primary
     })
 
     if (!res.confirm) return
@@ -56,50 +44,72 @@ export default function RewardsPage() {
     }
   }
 
+  const affordableCount = activeChild.rewards.filter((reward: Reward) => activeChild.totalPoints >= reward.cost).length
+
   return (
-    <View className='rewards-page'>
-      {/* 顶部积分栏 */}
-      <View className='points-header'>
-        <View className='points-decoration' />
-        <Text className='points-label'>当前积分</Text>
-        <Text className='points-value'>⭐️ {activeChild.totalPoints}</Text>
-        <Text className='points-hint'>完成任务积累积分，兑换心仪奖励！</Text>
+    <View className='rewards-page page-shell'>
+      <View className='page-hero rewards-hero'>
+        <Text className='hero-overline'>奖励中心</Text>
+        <Text className='hero-title'>{activeChild.totalPoints} 积分</Text>
+        <Text className='hero-subtitle'>完成任务后积累积分，再从奖励列表里挑选喜欢的礼物。</Text>
+
+        <View className='summary-grid'>
+          <View className='summary-item'>
+            <Text className='summary-value'>{affordableCount}</Text>
+            <Text className='summary-label'>可兑换</Text>
+          </View>
+          <View className='summary-item'>
+            <Text className='summary-value'>{activeChild.rewards.length}</Text>
+            <Text className='summary-label'>奖励总数</Text>
+          </View>
+          <View className='summary-item'>
+            <Text className='summary-value'>{activeChild.redemptions?.length || 0}</Text>
+            <Text className='summary-label'>已兑换</Text>
+          </View>
+        </View>
       </View>
 
-      <ScrollView scrollY className='scroll-area'>
+      <ScrollView scrollY className='page-scroll rewards-scroll'>
         {activeChild.rewards.length === 0 ? (
-          <View className='empty-state'>
-            <Text className='empty-icon'>🎁</Text>
-            <Text className='empty-text'>还没有奖励</Text>
-            <Text className='empty-hint'>请家长在家长模式中添加奖励</Text>
+          <View className='empty-panel'>
+            <Text className='empty-title'>还没有奖励</Text>
+            <Text className='empty-text'>家长可以在家长模式里添加奖励，孩子就能在这里兑换。</Text>
           </View>
         ) : (
           <View className='rewards-grid'>
-            {activeChild.rewards.map(reward => {
+            {activeChild.rewards.map((reward: Reward) => {
               const canAfford = activeChild.totalPoints >= reward.cost
-              const bgColor = getBgColor(reward.color)
+              const palette = getSoftPalette(reward.color)
               return (
-                <View key={reward.id} className='reward-card'>
-                  {/* 积分标签 */}
-                  <View className={`cost-badge ${canAfford ? '' : 'unaffordable'}`}>
-                    <Text className='cost-text'>{reward.cost} ⭐️</Text>
+                <View
+                  key={reward.id}
+                  className='reward-card'
+                  style={{ borderColor: palette.border }}
+                >
+                  <View
+                    className={`cost-badge ${canAfford ? '' : 'unaffordable'}`}
+                    style={canAfford ? {
+                      backgroundColor: palette.tintStrong,
+                      color: palette.text,
+                    } : undefined}
+                  >
+                    <Text className='cost-text'>{reward.cost} 积分</Text>
                   </View>
 
-                  {/* 图标 */}
-                  <View className='reward-icon-wrap' style={{ backgroundColor: bgColor }}>
+                  <View className='reward-icon-wrap' style={{ backgroundColor: palette.tint }}>
                     <Text className='reward-icon'>{reward.icon}</Text>
                   </View>
 
-                  {/* 名称 */}
                   <Text className='reward-title'>{reward.title}</Text>
+                  <Text className='reward-status'>{canAfford ? '现在可以兑换' : `还差 ${reward.cost - activeChild.totalPoints} 分`}</Text>
 
-                  {/* 兑换按钮 */}
                   <View
                     className={`redeem-btn ${canAfford ? 'active' : 'disabled'}`}
+                    style={canAfford ? { backgroundColor: palette.accent } : undefined}
                     onClick={() => canAfford && handleRedeem(reward)}
                   >
                     <Text className='redeem-text'>
-                      {canAfford ? '立即兑换' : `差 ${reward.cost - activeChild.totalPoints} 分`}
+                      {canAfford ? '立即兑换' : '积分不足'}
                     </Text>
                   </View>
                 </View>
@@ -108,10 +118,12 @@ export default function RewardsPage() {
           </View>
         )}
 
-        {/* 兑换记录 */}
         {activeChild.redemptions && activeChild.redemptions.length > 0 && (
-          <View className='history-section'>
-            <Text className='history-title'>兑换记录</Text>
+          <View className='section-card history-section'>
+            <View className='section-card-header'>
+              <Text className='section-title'>兑换记录</Text>
+              <Text className='section-note'>最近 10 条</Text>
+            </View>
             {[...activeChild.redemptions].reverse().slice(0, 10).map(r => (
               <View key={r.id} className='history-item'>
                 <Text className='history-icon'>{r.rewardIcon || '🎁'}</Text>
@@ -119,7 +131,7 @@ export default function RewardsPage() {
                   <Text className='history-name'>{r.rewardTitle || r.rewardName}</Text>
                   <Text className='history-date'>{(r.redeemedAt || r.date || '').slice(0, 10)}</Text>
                 </View>
-                <Text className='history-cost'>-{r.cost} ⭐️</Text>
+                <Text className='history-cost'>-{r.cost}</Text>
               </View>
             ))}
           </View>

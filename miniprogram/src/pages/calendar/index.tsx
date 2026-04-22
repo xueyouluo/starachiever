@@ -1,6 +1,6 @@
 import { View, Text } from '@tarojs/components'
 import { useLoad } from '@tarojs/taro'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useStore } from '../../store'
 import './index.scss'
 
@@ -22,33 +22,33 @@ export default function CalendarPage() {
   }
 
   const getDayContent = (day: number) => {
-    if (!activeChild?.history) return { style: '', icon: null, count: 0 }
+    if (!activeChild?.history) return { style: '', marker: '', count: 0 }
 
     const dateStr = formatDate(day)
     const count = activeChild.history[dateStr] || 0
 
     let style = ''
-    let icon = null
+    let marker = ''
 
     if (count > 0) {
       if (count >= 5) {
         style = 'excellent'
-        icon = '⭐'
+        marker = '5+'
       } else if (count >= 3) {
         style = 'good'
-        icon = '✨'
+        marker = '3+'
       } else {
         style = 'normal'
-        icon = null
       }
     }
 
-    const today = dateStr === new Date().toISOString().split('T')[0]
+    const todayDate = new Date()
+    const today = dateStr === `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`
     if (today) {
       style += ' today'
     }
 
-    return { style, icon, count }
+    return { style, marker, count }
   }
 
   const totalTasksThisMonth = () => {
@@ -80,27 +80,44 @@ export default function CalendarPage() {
   }
 
   const startingEmptyCells = firstDayOfMonth
+  const activeDaysThisMonth = Array.from({ length: daysInMonth }).filter((_, index) => {
+    const day = index + 1
+    return (activeChild.history?.[formatDate(day)] || 0) > 0
+  }).length
 
   return (
-    <View className='calendar-page'>
-      {/* 渐变头部 */}
-      <View className='cal-header'>
-        <Text className='cal-header-title'>📅 打卡记录</Text>
-        <Text className='cal-header-sub'>{activeChild.name} 的成长轨迹</Text>
+    <View className='calendar-page page-shell'>
+      <View className='page-hero calendar-hero'>
+        <Text className='hero-overline'>成长节奏</Text>
+        <Text className='hero-title'>打卡记录</Text>
+        <Text className='hero-subtitle'>{activeChild.name} 本月已经留下 {activeDaysThisMonth} 天的成长足迹。</Text>
+
+        <View className='summary-grid'>
+          <View className='summary-item'>
+            <Text className='summary-value'>{totalTasksThisMonth()}</Text>
+            <Text className='summary-label'>本月完成</Text>
+          </View>
+          <View className='summary-item'>
+            <Text className='summary-value'>{activeDaysThisMonth}</Text>
+            <Text className='summary-label'>打卡天数</Text>
+          </View>
+          <View className='summary-item'>
+            <Text className='summary-value'>{activeChild.currentStreak}</Text>
+            <Text className='summary-label'>连续打卡</Text>
+          </View>
+        </View>
       </View>
 
-      <View className='content-wrapper'>
-        {/* 统计卡片 */}
-        <View className='stats-card'>
-          <Text className='stats-title'>本月累计打卡</Text>
-          <View className='stats-content'>
-            <Text className='stats-count'>{totalTasksThisMonth()}</Text>
-            <Text className='stats-unit'>次</Text>
-          </View>
-          <Text className='stats-hint'>每一天都在进步！</Text>
+      <View className='section-card stats-card'>
+        <Text className='stats-title'>本月累计任务</Text>
+        <View className='stats-content'>
+          <Text className='stats-count'>{totalTasksThisMonth()}</Text>
+          <Text className='stats-unit'>次</Text>
         </View>
+        <Text className='stats-hint'>连续的小进步，最后会连成很长的成长曲线。</Text>
+      </View>
 
-        {/* 月份导航 */}
+      <View className='section-card calendar-shell'>
         <View className='month-nav'>
           <View className='nav-btn' onClick={prevMonth}>
             <Text>←</Text>
@@ -113,9 +130,7 @@ export default function CalendarPage() {
           </View>
         </View>
 
-        {/* 日历 */}
         <View className='calendar-container'>
-          {/* 星期标题 */}
           <View className='week-header'>
             {weekDays.map(day => (
               <View key={day} className='week-day'>
@@ -124,7 +139,6 @@ export default function CalendarPage() {
             ))}
           </View>
 
-          {/* 日期网格 */}
           <View className='calendar-grid'>
             {Array.from({ length: startingEmptyCells }).map((_, i) => (
               <View key={`empty-${i}`} className='calendar-day empty'></View>
@@ -132,14 +146,14 @@ export default function CalendarPage() {
 
             {Array.from({ length: daysInMonth }).map((_, i) => {
               const day = i + 1
-              const { style, icon, count } = getDayContent(day)
+              const { style, marker, count } = getDayContent(day)
 
               return (
                 <View key={day} className={`calendar-day ${style}`}>
                   <Text className='day-number'>{day}</Text>
                   {count > 0 && (
                     <View className='day-indicator'>
-                      {icon || <View className='dot' />}
+                      {marker ? <Text className='day-marker'>{marker}</Text> : <View className='dot' />}
                     </View>
                   )}
                 </View>
@@ -147,20 +161,21 @@ export default function CalendarPage() {
             })}
           </View>
         </View>
+      </View>
 
-        {/* 图例 */}
+      <View className='section-card legend-card'>
         <View className='legend'>
           <View className='legend-item'>
             <View className='legend-dot normal'></View>
-            <Text className='legend-text'>完成任务</Text>
+            <Text className='legend-text'>1 次以上</Text>
           </View>
           <View className='legend-item'>
-            <View className='legend-dot good'>✨</View>
-            <Text className='legend-text'>表现不错 (3+)</Text>
+            <View className='legend-dot good'>3+</View>
+            <Text className='legend-text'>表现稳定</Text>
           </View>
           <View className='legend-item'>
-            <View className='legend-dot excellent'>⭐</View>
-            <Text className='legend-text'>表现超棒 (5+)</Text>
+            <View className='legend-dot excellent'>5+</View>
+            <Text className='legend-text'>状态很好</Text>
           </View>
         </View>
       </View>

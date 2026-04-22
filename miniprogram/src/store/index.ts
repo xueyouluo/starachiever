@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import * as storage from '../services/storage'
-import { syncToCloud } from '../services/cloud'
+import { syncToCloud, restoreFromCloud } from '../services/cloud'
 import { createDefaultChild } from '../constants'
 import { PET_TYPES, PET_ACTIONS, STAGE_THRESHOLDS } from '../constants/pets'
 import { applyTimeDecay, calcPetStage } from '../utils/petUtils'
@@ -9,8 +9,12 @@ import type { PetActionType, Pet } from '../types'
 // 后台静默同步，不阻塞操作，失败不提示
 const backgroundSync = () => {
   storage.getData().then(data => {
-    if (data) syncToCloud(data).catch(() => {})
-  }).catch(() => {})
+    if (data) syncToCloud(data).catch((e) => {
+      console.error('[云端同步失败]', e)
+    })
+  }).catch((e) => {
+    console.error('[读取本地数据失败]', e)
+  })
 }
 
 // 每日重置：若 lastLoginDate 不是今天，重置任务并更新连续打卡天数
@@ -100,25 +104,41 @@ export const useStore = create<AppState>((set, get) => ({
           activeChild
         })
       } else {
-        // 首次使用，创建默认数据
-        const defaultChild = createDefaultChild('小宝贝', '👶')
-        await storage.setData({
-          children: [defaultChild],
-          activeChildId: defaultChild.id
-        })
-        set({
-          children: [defaultChild],
-          activeChild: defaultChild
-        })
+        // 本地无数据，先尝试从云端恢复
+        const cloudData = await restoreFromCloud()
+        if (cloudData && cloudData.children?.length > 0) {
+          await storage.setData(cloudData)
+          const activeChild = cloudData.children.find(c => c.id === cloudData.activeChildId) || cloudData.children[0]
+          set({ children: cloudData.children, activeChild })
+        } else {
+          // 云端也没有，首次使用，创建默认数据
+          const defaultChild = createDefaultChild('小宝贝', '👶')
+          await storage.setData({
+            children: [defaultChild],
+            activeChildId: defaultChild.id
+          })
+          set({
+            children: [defaultChild],
+            activeChild: defaultChild
+          })
+        }
       }
     } catch (e) {
       console.error('初始化失败', e)
-      // 出错时也创建默认数据
+      // 出错时先尝试从云端恢复
+      try {
+        const cloudData = await restoreFromCloud()
+        if (cloudData && cloudData.children?.length > 0) {
+          await storage.setData(cloudData)
+          const activeChild = cloudData.children.find(c => c.id === cloudData.activeChildId) || cloudData.children[0]
+          set({ children: cloudData.children, activeChild })
+          return
+        }
+      } catch {}
+      // 云端也失败，创建默认数据
       const defaultChild = createDefaultChild('小宝贝', '👶')
-      set({
-        children: [defaultChild],
-        activeChild: defaultChild
-      })
+      await storage.setData({ children: [defaultChild], activeChildId: defaultChild.id })
+      set({ children: [defaultChild], activeChild: defaultChild })
     } finally {
       set({ isLoading: false })
     }

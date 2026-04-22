@@ -1,293 +1,161 @@
-.pet-page {
-  min-height: 100vh;
-  background: #FFF5F0;
-  display: flex;
-  flex-direction: column;
+@use '../../styles/variables.scss' as *;
+
+.pet-scroll {
+  height: calc(100vh - 268px);
 }
 
-/* 顶部栏 */
-.pet-header {
-  background: linear-gradient(135deg, #FF6348 0%, #FFA502 100%);
-  padding: 24px 20px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.header-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: white;
-}
-
-.header-points {
-  font-size: 18px;
-  font-weight: 700;
-  color: white;
-}
-
-/* 滚动区域 */
-.scroll-area {
-  flex: 1;
-  padding: 16px;
-  height: calc(100vh - 100px);
-}
-
-/* 宠物展示区 */
-.pet-showcase {
-  background: white;
-  border-radius: 24px;
-  padding: 28px 20px 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 0 4px 20px rgba(255, 99, 72, 0.1);
-  margin-bottom: 16px;
+.pet-hero-emoji {
+  position: relative;
+  z-index: 1;
+  margin-top: 14px;
+  text-align: center;
 }
 
 .pet-emoji-big {
-  font-size: 88px;
+  font-size: 90px;
   line-height: 1;
-  margin-bottom: 12px;
-  display: block;
 }
 
-.bounce {
-  animation: bounce 1.8s ease-in-out infinite;
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-.pet-mood-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.pet-mood-emoji {
-  font-size: 22px;
-}
-
-.pet-mood-label {
-  font-size: 15px;
-  color: #636E72;
-}
-
-.pet-name-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.pet-name {
-  font-size: 22px;
-  font-weight: 700;
-  color: #2D3436;
-}
-
-.pet-stage-badge {
-  background: linear-gradient(135deg, #FF6348, #FFA502);
-  border-radius: 20px;
-  padding: 3px 12px;
-}
-
-.pet-stage-text {
-  font-size: 12px;
-  font-weight: 600;
-  color: white;
-}
-
-/* 属性卡片 */
-.stats-card {
-  background: white;
-  border-radius: 20px;
-  padding: 16px 20px;
-  box-shadow: 0 4px 20px rgba(255, 99, 72, 0.08);
+.pet-section {
   margin-bottom: 16px;
-}
-
-.stats-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #2D3436;
-  display: block;
-  margin-bottom: 14px;
 }
 
 .stat-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
 .stat-row:last-child {
   margin-bottom: 0;
 }
 
+.stat-label,
+.stat-value,
+.growth-count,
+.shop-hint,
+.shop-pet-name,
+.shop-pet-desc,
+.shop-pet-special,
+.shop-price {
+  display: block;
+}
+
 .stat-label {
+  width: 56px;
   font-size: 13px;
-  color: #636E72;
-  width: 68px;
+  color: $text-secondary;
   flex-shrink: 0;
 }
 
 .stat-bar-bg {
   flex: 1;
   height: 10px;
-  background: #F0F0F0;
-  border-radius: 6px;
+  border-radius: $radius-full;
   overflow: hidden;
 }
 
 .stat-bar-fill {
   height: 100%;
-  border-radius: 6px;
-  transition: width 0.4s ease;
+  border-radius: $radius-full;
 }
 
 .stat-value {
-  font-size: 13px;
-  font-weight: 600;
-  color: #2D3436;
   width: 28px;
   text-align: right;
-  flex-shrink: 0;
-}
-
-/* 操作区 */
-.actions-card {
-  background: white;
-  border-radius: 20px;
-  padding: 16px 20px;
-  box-shadow: 0 4px 20px rgba(255, 99, 72, 0.08);
-  margin-bottom: 16px;
-}
-
-.actions-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #2D3436;
-  display: block;
-  margin-bottom: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-color;
 }
 
 .actions-row {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
 .action-btn {
   flex: 1;
+  padding: 14px 8px;
+  border-radius: $radius-lg;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 14px 8px;
-  border-radius: 16px;
   gap: 4px;
 }
 
 .action-btn.active {
-  background: linear-gradient(135deg, #FF6348, #FFA502);
-  box-shadow: 0 4px 12px rgba(255, 99, 72, 0.25);
+  background: $gradient-accent;
+  box-shadow: none;
 }
 
 .action-btn.disabled {
-  background: #F3F4F6;
+  background: #E8EEEA;
 }
 
 .action-emoji {
   font-size: 26px;
 }
 
-.action-label {
-  font-size: 13px;
+.action-label,
+.action-cost {
+  display: block;
+  font-size: 12px;
   font-weight: 600;
 }
 
 .action-btn.active .action-label,
 .action-btn.active .action-cost {
-  color: white;
+  color: $text-inverse;
 }
 
 .action-btn.disabled .action-label,
 .action-btn.disabled .action-cost {
-  color: #9CA3AF;
-}
-
-.action-cost {
-  font-size: 11px;
-  font-weight: 500;
-}
-
-/* 成长卡片 */
-.growth-card {
-  background: white;
-  border-radius: 20px;
-  padding: 16px 20px;
-  box-shadow: 0 4px 20px rgba(255, 99, 72, 0.08);
-  margin-bottom: 16px;
-}
-
-.growth-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #2D3436;
-  display: block;
-  margin-bottom: 14px;
+  color: $text-light;
 }
 
 .growth-stages {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
+  gap: 8px;
 }
 
 .growth-stage {
   font-size: 12px;
-  color: #B2BEC3;
+  color: $text-light;
   flex-shrink: 0;
 }
 
 .growth-stage.active {
-  color: #FF6348;
-  font-weight: 700;
+  color: $primary-strong;
+  font-weight: 600;
 }
 
 .growth-line {
   flex: 1;
   height: 6px;
-  background: #F0F0F0;
-  border-radius: 4px;
+  background: $bg-muted;
+  border-radius: $radius-full;
   overflow: hidden;
 }
 
 .growth-progress {
   height: 100%;
-  background: linear-gradient(90deg, #FF6348, #FFA502);
-  border-radius: 4px;
-  transition: width 0.4s ease;
+  background: $gradient-accent;
 }
 
 .growth-count {
+  margin-top: 12px;
   font-size: 12px;
-  color: #B2BEC3;
-  text-align: center;
-  display: block;
+  line-height: 1.6;
+  color: $text-secondary;
 }
 
-/* 商店 */
 .shop-hint {
-  font-size: 14px;
-  color: #B2BEC3;
-  text-align: center;
-  display: block;
-  margin-bottom: 16px;
+  margin: 0 4px 14px;
+  font-size: 13px;
+  color: $text-secondary;
+  line-height: 1.6;
 }
 
 .shop-list {
@@ -297,20 +165,16 @@
 }
 
 .shop-card {
-  background: white;
-  border-radius: 20px;
-  padding: 16px;
   display: flex;
   align-items: center;
   gap: 14px;
-  box-shadow: 0 4px 20px rgba(255, 99, 72, 0.08);
 }
 
 .shop-pet-emoji {
-  font-size: 52px;
-  flex-shrink: 0;
   width: 60px;
+  font-size: 54px;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .shop-pet-info {
@@ -319,76 +183,68 @@
 }
 
 .shop-pet-name {
-  font-size: 17px;
-  font-weight: 700;
-  color: #2D3436;
-  display: block;
-  margin-bottom: 3px;
+  font-size: 16px;
+  font-weight: 600;
+  color: $text-color;
 }
 
 .shop-pet-desc {
+  margin-top: 4px;
   font-size: 12px;
-  color: #636E72;
-  display: block;
-  margin-bottom: 3px;
+  color: $text-secondary;
+  line-height: 1.5;
 }
 
 .shop-pet-special {
+  margin-top: 4px;
   font-size: 11px;
-  color: #FF6348;
-  display: block;
+  color: $primary-strong;
 }
 
 .shop-adopt-wrap {
+  min-width: 72px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
 }
 
 .shop-price {
-  font-size: 14px;
-  font-weight: 700;
-  color: #FF6348;
+  font-size: 13px;
+  font-weight: 600;
+  color: $primary-strong;
 }
 
 .shop-price.unaffordable {
-  color: #B2BEC3;
+  color: $text-light;
 }
 
 .shop-adopt-btn {
-  padding: 8px 16px;
-  border-radius: 12px;
-  text-align: center;
+  min-width: 68px;
+  padding: 9px 12px;
+  border-radius: $radius-lg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .shop-adopt-btn.active {
-  background: linear-gradient(135deg, #FF6348, #FFA502);
-  box-shadow: 0 4px 12px rgba(255, 99, 72, 0.25);
+  background: $gradient-accent;
 }
 
 .shop-adopt-btn.disabled {
-  background: #F3F4F6;
+  background: #E8EEEA;
 }
 
 .shop-adopt-text {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .shop-adopt-btn.active .shop-adopt-text {
-  color: white;
+  color: $text-inverse;
 }
 
 .shop-adopt-btn.disabled .shop-adopt-text {
-  color: #9CA3AF;
-}
-
-/* 加载 */
-.loading-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+  color: $text-light;
 }

@@ -1,230 +1,80 @@
-.profile-page {
-  min-height: 100vh;
-  background: #FFF5F0;
+@use '../../styles/variables.scss' as *;
+
+.profile-scroll {
+  height: calc(100vh - 40px);
 }
 
-.profile-header {
-  background: linear-gradient(135deg, #FF6B9D, #FF6348);
-  padding: 40px 20px 40px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: white;
-  position: relative;
-  overflow: hidden;
-}
-
-.profile-header::before {
-  content: '';
-  position: absolute;
-  top: -20px;
-  right: -20px;
-  width: 120px;
-  height: 120px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-}
-
-.profile-header::after {
-  content: '';
-  position: absolute;
-  bottom: -30px;
-  left: -10px;
-  width: 90px;
-  height: 90px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-}
-
-.avatar {
-  width: 88px;
-  height: 88px;
-  border-radius: 50%;
+.profile-avatar {
+  width: 92px;
+  height: 92px;
+  border-radius: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.25);
-  margin-bottom: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  border: 3px solid rgba(255, 255, 255, 0.4);
+  margin-bottom: 14px;
   position: relative;
   z-index: 1;
+  box-shadow: 0 0 0 0.5px rgba(60, 60, 67, 0.14);
 }
 
-.avatar-text {
-  font-size: 44px;
+.profile-avatar-text {
+  font-size: 46px;
 }
 
-.name {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 8px;
-  position: relative;
-  z-index: 1;
+.profile-summary-grid {
+  margin-top: 18px;
 }
 
-.switch-btn {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 8px 20px;
-  border-radius: 20px;
-  font-size: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  position: relative;
-  z-index: 1;
-}
-
-/* 三色统计卡片 */
-.stats-container {
-  display: flex;
-  margin: -24px 20px 20px;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 8px 24px rgba(255, 99, 72, 0.15);
-  position: relative;
-  z-index: 2;
-}
-
-.stat-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px 8px;
-}
-
-.stat-item:nth-child(1) {
-  background: #FFF0EC;
-}
-
-/* stat-divider 占据 child(2)，连续打卡在 child(3) */
-.stat-item:nth-child(3) {
-  background: #ECFDF5;
-}
-
-/* stat-divider 占据 child(4)，完成任务在 child(5) */
-.stat-item:nth-child(5) {
-  background: #EEF2FF;
-}
-
-.stat-value {
-  font-size: 28px;
-  font-weight: bold;
-  margin-bottom: 4px;
-}
-
-.stat-item:nth-child(1) .stat-value {
-  color: #FF6348;
-}
-
-.stat-item:nth-child(3) .stat-value {
-  color: #26DE81;
-}
-
-.stat-item:nth-child(5) .stat-value {
-  color: #A29BFE;
-}
-
-.stat-label {
-  font-size: 11px;
-  color: #636E72;
-  font-weight: 600;
-}
-
-.stat-divider {
-  display: none;
-}
-
-.badges-section {
-  background: white;
-  margin: 0 20px 20px;
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 4px 20px rgba(255, 99, 72, 0.08);
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.section-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #2D3436;
-}
-
-.section-count {
-  font-size: 14px;
-  color: #636E72;
+.profile-section {
+  margin-top: 16px;
 }
 
 .badges-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
 .badge-item {
-  border: 2px solid;
-  border-radius: 16px;
-  padding: 12px 8px;
+  min-height: 124px;
+  border: none;
+  border-radius: $radius-xl;
+  padding: 16px 14px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  background: white;
-  box-shadow: 0 2px 8px rgba(255, 99, 72, 0.08);
+  gap: 8px;
+  box-shadow: 0 0 0 0.5px rgba(60, 60, 67, 0.14);
 }
 
 .badge-item.locked {
-  opacity: 0.5;
-  border-color: #DFE6E9;
+  background: #F7F9F8;
+  border-color: $border-color;
   box-shadow: none;
 }
 
+.badge-icon,
+.badge-name,
+.badge-desc {
+  display: block;
+}
+
 .badge-icon {
-  font-size: 32px;
-  margin-bottom: 8px;
+  font-size: 30px;
 }
 
 .badge-name {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
-  color: #2D3436;
+  color: $text-color;
 }
 
 .badge-desc {
-  font-size: 10px;
-  color: #636E72;
-  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: $text-secondary;
 }
 
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
-  color: #636E72;
-}
-
-.parent-mode-btn {
-  margin: 0 20px 40px;
-  background: linear-gradient(135deg, #FF6348, #FFA502);
-  border-radius: 20px;
-  padding: 16px;
-  text-align: center;
-  box-shadow: 0 4px 16px rgba(255, 99, 72, 0.25);
-}
-
-.parent-mode-text {
-  font-size: 16px;
-  font-weight: 600;
-  color: white;
-}
-
-.loading-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+.badge-item.locked .badge-icon,
+.badge-item.locked .badge-name {
+  opacity: 0.78;
 }
