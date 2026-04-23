@@ -102,7 +102,9 @@ export default function PetPage() {
         const canAfford = activeChild.totalPoints >= petType.price
         return (
           <View key={petType.id} className='section-card shop-card'>
-            <Text className='shop-pet-emoji'>{petType.emoji[0]}</Text>
+            <View className='shop-pet-emoji-wrap'>
+              <Text className='shop-pet-emoji'>{petType.emoji[0]}</Text>
+            </View>
             <View className='shop-pet-info'>
               <Text className='shop-pet-name'>{petType.name}</Text>
               <Text className='shop-pet-desc'>{petType.description}</Text>
