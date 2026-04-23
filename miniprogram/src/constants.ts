@@ -115,7 +115,8 @@ export const createKoalaChild = (name: string, avatar: string = '🐨'): ChildPr
     currentStreak: 0,
     lastLoginDate: new Date().toISOString().split('T')[0],
     unlockedBadges: [],
-    stats
+    stats,
+    pets: [],
   }
 }
 
@@ -139,6 +140,7 @@ export const createDefaultChild = (name: string, avatar: string = '👶'): Child
     currentStreak: 0,
     lastLoginDate: new Date().toISOString().split('T')[0],
     unlockedBadges: [],
-    stats: initialStatsWithCategories
+    stats: initialStatsWithCategories,
+    pets: [],
   };
 };

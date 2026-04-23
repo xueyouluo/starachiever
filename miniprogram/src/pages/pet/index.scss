@@ -20,17 +20,40 @@
   margin-bottom: 16px;
 }
 
-.stat-row {
+.pet-selector-scroll {
+  margin: 0 -2px;
+}
+
+.pet-selector-row {
+  display: flex;
+  gap: 10px;
+  padding: 2px;
+}
+
+.pet-selector-card {
+  min-width: 128px;
+  padding: 14px 14px 12px;
+  border-radius: $radius-lg;
+  background: $bg-card-soft;
+  box-shadow: 0 0 0 0.5px rgba(60, 60, 67, 0.14);
+}
+
+.pet-selector-card.active {
+  background: rgba(10, 132, 255, 0.08);
+  box-shadow: 0 0 0 1px rgba(10, 132, 255, 0.18);
+}
+
+.pet-selector-top {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
+  justify-content: space-between;
+  gap: 10px;
 }
 
-.stat-row:last-child {
-  margin-bottom: 0;
-}
-
+.pet-selector-emoji,
+.pet-selector-stage,
+.pet-selector-name,
+.pet-selector-meta,
 .stat-label,
 .stat-value,
 .growth-count,
@@ -40,6 +63,40 @@
 .shop-pet-special,
 .shop-price {
   display: block;
+}
+
+.pet-selector-emoji {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.pet-selector-stage {
+  font-size: 11px;
+  color: $text-light;
+}
+
+.pet-selector-name {
+  margin-top: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: $text-color;
+}
+
+.pet-selector-meta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: $text-secondary;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.stat-row:last-child {
+  margin-bottom: 0;
 }
 
 .stat-label {
@@ -156,6 +213,10 @@
   font-size: 13px;
   color: $text-secondary;
   line-height: 1.6;
+}
+
+.shop-hint-inline {
+  margin: 0 0 14px;
 }
 
 .shop-list {

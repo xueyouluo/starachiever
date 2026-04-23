@@ -151,7 +151,8 @@ export interface ChildProfile {
   unlockedBadges: string[]; // List of Badge IDs
   stats: UserStats;
 
-  // 宠物（可选，无宠物时为 undefined）
+  // 宠物列表；pet 为兼容旧数据保留的镜像字段
+  pets: Pet[];
   pet?: Pet;
 }
 

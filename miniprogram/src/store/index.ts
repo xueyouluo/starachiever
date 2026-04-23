@@ -2,9 +2,9 @@ import { create } from 'zustand'
 import * as storage from '../services/storage'
 import { syncToCloud, restoreFromCloud } from '../services/cloud'
 import { createDefaultChild } from '../constants'
-import { PET_TYPES, PET_ACTIONS, STAGE_THRESHOLDS } from '../constants/pets'
-import { applyTimeDecay, calcPetStage } from '../utils/petUtils'
-import type { PetActionType, Pet } from '../types'
+import { PET_TYPES, PET_ACTIONS } from '../constants/pets'
+import { applyTimeDecay, calcPetStage, getChildPets, withNormalizedChildPets } from '../utils/petUtils'
+import type { ChildProfile, PetActionType, Pet } from '../types'
 
 // 后台静默同步，不阻塞操作，失败不提示
 const backgroundSync = () => {
@@ -71,7 +71,7 @@ interface AppState {
   importData: (jsonData: string) => Promise<boolean>
   checkBadgeUnlock: (child: ChildProfile) => string[]
   adoptPet: (petTypeId: string, petName: string) => Promise<void>
-  carePet: (actionType: PetActionType) => Promise<void>
+  carePet: (petId: string, actionType: PetActionType) => Promise<void>
   syncPetDecay: () => Promise<void>
 }
 
@@ -107,9 +107,10 @@ export const useStore = create<AppState>((set, get) => ({
         // 本地无数据，先尝试从云端恢复
         const cloudData = await restoreFromCloud()
         if (cloudData && cloudData.children?.length > 0) {
-          await storage.setData(cloudData)
-          const activeChild = cloudData.children.find(c => c.id === cloudData.activeChildId) || cloudData.children[0]
-          set({ children: cloudData.children, activeChild })
+          const normalizedCloudData = storage.normalizeStorageData(cloudData)
+          await storage.setData(normalizedCloudData)
+          const activeChild = normalizedCloudData.children.find(c => c.id === normalizedCloudData.activeChildId) || normalizedCloudData.children[0]
+          set({ children: normalizedCloudData.children, activeChild })
         } else {
           // 云端也没有，首次使用，创建默认数据
           const defaultChild = createDefaultChild('小宝贝', '👶')
@@ -129,9 +130,10 @@ export const useStore = create<AppState>((set, get) => ({
       try {
         const cloudData = await restoreFromCloud()
         if (cloudData && cloudData.children?.length > 0) {
-          await storage.setData(cloudData)
-          const activeChild = cloudData.children.find(c => c.id === cloudData.activeChildId) || cloudData.children[0]
-          set({ children: cloudData.children, activeChild })
+          const normalizedCloudData = storage.normalizeStorageData(cloudData)
+          await storage.setData(normalizedCloudData)
+          const activeChild = normalizedCloudData.children.find(c => c.id === normalizedCloudData.activeChildId) || normalizedCloudData.children[0]
+          set({ children: normalizedCloudData.children, activeChild })
           return
         }
       } catch {}
@@ -502,14 +504,16 @@ export const useStore = create<AppState>((set, get) => ({
         throw new Error('数据格式不正确')
       }
 
-      await storage.setData({
+      const normalizedData = storage.normalizeStorageData({
         children: data.children,
         activeChildId: data.children[0]?.id || null
       })
 
+      await storage.setData(normalizedData)
+
       set({
-        children: data.children,
-        activeChild: data.children[0] || null
+        children: normalizedData.children,
+        activeChild: normalizedData.children[0] || null
       })
 
       backgroundSync()
@@ -561,10 +565,6 @@ export const useStore = create<AppState>((set, get) => ({
     const child = state.activeChild
     if (!child) return
 
-    if (child.pet) {
-      throw new Error('已经有宠物了，一次只能养一只哦')
-    }
-
     const petType = PET_TYPES.find(p => p.id === petTypeId)
     if (!petType) throw new Error('宠物类型不存在')
 
@@ -597,12 +597,12 @@ export const useStore = create<AppState>((set, get) => ({
       date: now.slice(0, 10),
     }
 
-    const updatedChild = {
+    const updatedChild = withNormalizedChildPets({
       ...child,
-      pet,
+      pets: [...getChildPets(child), pet],
       totalPoints: child.totalPoints - petType.price,
       redemptions: [...child.redemptions, redemption],
-    }
+    })
 
     await storage.updateChild(updatedChild)
     set(s => ({
@@ -612,12 +612,16 @@ export const useStore = create<AppState>((set, get) => ({
     backgroundSync()
   },
 
-  carePet: async (actionType: PetActionType) => {
+  carePet: async (petId: string, actionType: PetActionType) => {
     const state = get()
     const child = state.activeChild
-    if (!child || !child.pet) throw new Error('没有宠物')
+    const pets = getChildPets(child)
+    if (!child || pets.length === 0) throw new Error('没有宠物')
 
-    const petType = PET_TYPES.find(p => p.id === child.pet!.petTypeId)
+    const currentPet = pets.find(p => p.id === petId)
+    if (!currentPet) throw new Error('宠物不存在')
+
+    const petType = PET_TYPES.find(p => p.id === currentPet.petTypeId)
     if (!petType) throw new Error('宠物类型不存在')
 
     const action = PET_ACTIONS[actionType]
@@ -626,7 +630,7 @@ export const useStore = create<AppState>((set, get) => ({
     }
 
     // 先应用时间衰减
-    const decayedPet = applyTimeDecay(child.pet, petType)
+    const decayedPet = applyTimeDecay(currentPet, petType)
 
     // 计算效果
     const bonusMap: Record<PetActionType, number> = {
@@ -669,19 +673,19 @@ export const useStore = create<AppState>((set, get) => ({
     const redemption = {
       id: now + '_care',
       rewardId: `pet_care_${actionType}`,
-      rewardTitle: `${action.label}${child.pet.name}`,
+      rewardTitle: `${action.label}${currentPet.name}`,
       rewardIcon: action.emoji,
       cost: action.cost,
       redeemedAt: now,
       date: now.slice(0, 10),
     }
 
-    const updatedChild = {
+    const updatedChild = withNormalizedChildPets({
       ...child,
-      pet: updatedPet,
+      pets: pets.map(p => p.id === petId ? updatedPet : p),
       totalPoints: child.totalPoints - action.cost,
       redemptions: [...child.redemptions, redemption],
-    }
+    })
 
     await storage.updateChild(updatedChild)
     set(s => ({
@@ -694,21 +698,37 @@ export const useStore = create<AppState>((set, get) => ({
   syncPetDecay: async () => {
     const state = get()
     const child = state.activeChild
-    if (!child || !child.pet) return
+    const pets = getChildPets(child)
+    if (!child || pets.length === 0) return
 
-    const petType = PET_TYPES.find(p => p.id === child.pet!.petTypeId)
-    if (!petType) return
-
-    const decayedPet = applyTimeDecay(child.pet, petType)
-
-    // 距上次更新超过1分钟才持久化
-    const lastUpdated = new Date(child.pet.lastUpdatedAt)
     const now = new Date()
-    const minutesElapsed = (now.getTime() - lastUpdated.getTime()) / (1000 * 60)
+    let shouldPersist = false
+    let hasUpdates = false
 
-    const updatedChild = { ...child, pet: decayedPet }
+    const updatedPets = pets.map(pet => {
+      const petType = PET_TYPES.find(type => type.id === pet.petTypeId)
+      if (!petType) return pet
 
-    if (minutesElapsed > 1) {
+      const decayedPet = applyTimeDecay(pet, petType)
+      const minutesElapsed = (now.getTime() - new Date(pet.lastUpdatedAt).getTime()) / (1000 * 60)
+      if (minutesElapsed > 0) {
+        hasUpdates = true
+      }
+      if (minutesElapsed > 1) {
+        shouldPersist = true
+      }
+
+      return decayedPet
+    })
+
+    if (!hasUpdates) return
+
+    const updatedChild = withNormalizedChildPets({
+      ...child,
+      pets: updatedPets,
+    })
+
+    if (shouldPersist) {
       await storage.updateChild(updatedChild)
     }
 

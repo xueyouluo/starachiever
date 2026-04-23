@@ -1,6 +1,7 @@
 import { View, Text } from '@tarojs/components'
 import { useState } from 'react'
 import { getSoftPalette } from '../utils/colorTheme'
+import { formatSignedPoints } from '../utils/points'
 import type { Task } from '../types'
 import './TaskCard.scss'
 
@@ -49,7 +50,7 @@ export default function TaskCard({ task, onToggle }: TaskCardProps) {
                 color: task.completed ? '#7C908A' : palette.text,
               }}
             >
-              +{task.points} 积分
+              {formatSignedPoints(task.points)} 积分
             </Text>
             {category && (
               <Text

@@ -6,6 +6,7 @@ import { createDefaultChild, createKoalaChild } from '../../constants'
 import { DEFAULT_CATEGORIES } from '../../constants/categories'
 import { syncToCloud, restoreFromCloud } from '../../services/cloud'
 import { getData } from '../../services/storage'
+import { formatSignedPoints } from '../../utils/points'
 import './index.scss'
 
 export default function ParentPage() {
@@ -220,8 +221,8 @@ export default function ParentPage() {
       return
     }
 
-    if (!points || points < 1 || points > 100) {
-      Taro.showToast({ title: '积分范围1-100', icon: 'none' })
+    if (Number.isNaN(points) || points === 0 || points < -100 || points > 100) {
+      Taro.showToast({ title: '积分范围 -100 到 100，且不能为 0', icon: 'none' })
       return
     }
 
@@ -630,10 +631,10 @@ export default function ParentPage() {
                     <Text className='input-label'>积分</Text>
                     <Input
                       className='custom-input'
-                      type='number'
+                      type='text'
                       value={customTaskPoints}
                       onInput={(e) => setCustomTaskPoints(e.detail.value)}
-                      placeholder='1-100'
+                      placeholder='-100 到 100，负数表示扣分'
                     />
                     <View className='confirm-btn' onClick={handleAddCustomTask}>
                       <Text>确认添加</Text>
@@ -647,7 +648,7 @@ export default function ParentPage() {
                       <Text className='item-icon'>{task.icon}</Text>
                       <View className='item-details'>
                         <Text className='item-title'>{task.title}</Text>
-                        <Text className='item-meta'>+{task.points} 积分 · {task.category?.name || '其他'}</Text>
+                        <Text className='item-meta'>{formatSignedPoints(task.points)} 积分 · {task.category?.name || '其他'}</Text>
                       </View>
                       {task.completed && <Text className='completed-badge'>已完成</Text>}
                     </View>

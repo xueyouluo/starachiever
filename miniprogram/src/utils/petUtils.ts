@@ -1,4 +1,4 @@
-import type { Pet, PetType, PetMood, PetStage } from '../types'
+import type { ChildProfile, Pet, PetType, PetMood, PetStage } from '../types'
 import { STAGE_THRESHOLDS } from '../constants/pets'
 
 // 基础衰减（每小时）
@@ -61,6 +61,27 @@ export function calcPetStage(careCount: number): PetStage {
 export function getPetEmoji(petType: PetType, stage: PetStage): string {
   const stageIndex: Record<PetStage, number> = { baby: 0, teen: 1, adult: 2 }
   return petType.emoji[stageIndex[stage]]
+}
+
+export function getChildPets(child?: Pick<ChildProfile, 'pets' | 'pet'> | null): Pet[] {
+  if (!child) return []
+
+  const pets = Array.isArray(child.pets) ? child.pets.filter(Boolean) : []
+  if (pets.length > 0) {
+    return pets
+  }
+
+  return child.pet ? [child.pet] : []
+}
+
+export function withNormalizedChildPets<T extends ChildProfile>(child: T): T {
+  const pets = getChildPets(child)
+
+  return {
+    ...child,
+    pets,
+    pet: pets[0],
+  }
 }
 
 export const MOOD_EMOJI: Record<PetMood, string> = {

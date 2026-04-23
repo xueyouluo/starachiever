@@ -1,11 +1,24 @@
 import Taro from '@tarojs/taro'
 import type { ChildProfile } from '../types'
+import { withNormalizedChildPets } from '../utils/petUtils'
 
 const STORAGE_KEY = 'starachiever_data_v6'
 
 export interface StorageData {
   children: ChildProfile[]
   activeChildId: string | null
+}
+
+export const normalizeStorageData = <T extends StorageData>(data: T): T => {
+  const children = Array.isArray(data.children)
+    ? data.children.map(child => withNormalizedChildPets(child))
+    : []
+
+  return {
+    ...data,
+    children,
+    activeChildId: data.activeChildId ?? children[0]?.id ?? null,
+  }
 }
 
 /**
@@ -15,7 +28,7 @@ export const getData = async (): Promise<StorageData | null> => {
   try {
     const data = Taro.getStorageSync(STORAGE_KEY)
     if (data) {
-      return JSON.parse(data)
+      return normalizeStorageData(JSON.parse(data))
     }
     return null
   } catch (e) {
@@ -29,8 +42,9 @@ export const getData = async (): Promise<StorageData | null> => {
  */
 export const setData = async (data: StorageData): Promise<void> => {
   try {
+    const normalizedData = normalizeStorageData(data)
     // 本地存储
-    Taro.setStorageSync(STORAGE_KEY, JSON.stringify(data))
+    Taro.setStorageSync(STORAGE_KEY, JSON.stringify(normalizedData))
   } catch (e) {
     console.error('存储失败', e)
     throw e

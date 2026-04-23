@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useStore } from '../../store'
 import TaskCard from '../../components/TaskCard'
 import { getSoftPalette } from '../../utils/colorTheme'
+import { formatSignedPoints } from '../../utils/points'
 import type { Task } from '../../types'
 import './index.scss'
 
@@ -79,20 +80,21 @@ export default function TaskPage() {
 
       // 如果是完成任务，显示恭喜弹窗
       if (isCompleting) {
-        const encouragements = [
-          '太棒了！你完成了一个任务！🎉',
-          '做得好！继续加油！💪',
-          '你真厉害！🌟',
-          '优秀！又完成一个任务！⭐',
-          '哇！你越来越棒了！👏'
-        ]
-        const randomMsg = encouragements[Math.floor(Math.random() * encouragements.length)]
+        const isPositiveTask = task.points >= 0
 
         Taro.showModal({
-          title: '恭喜！',
-          content: `${randomMsg}\n\n获得 ${task.points} 积分！💎`,
+          title: isPositiveTask ? '恭喜！' : '已记录',
+          content: isPositiveTask
+            ? `${[
+                '太棒了！你完成了一个任务！🎉',
+                '做得好！继续加油！💪',
+                '你真厉害！🌟',
+                '优秀！又完成一个任务！⭐',
+                '哇！你越来越棒了！👏'
+              ][Math.floor(Math.random() * 5)]}\n\n本次积分变动 ${formatSignedPoints(task.points)} 分`
+            : `已完成「${task.title}」\n\n本次积分变动 ${formatSignedPoints(task.points)} 分`,
           showCancel: false,
-          confirmText: '太好了',
+          confirmText: isPositiveTask ? '太好了' : '知道了',
           success: () => {
             // 可以在这里添加其他效果
           }
