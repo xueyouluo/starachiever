@@ -30,6 +30,35 @@ const getTaskCategoryName = (task) => {
   return task.category.name || '其他'
 }
 
+const addDays = (dateKey, offset) => {
+  const date = new Date(`${dateKey}T00:00:00.000Z`)
+  date.setUTCDate(date.getUTCDate() + offset)
+  return date.toISOString().slice(0, 10)
+}
+
+const summarizeDay = (child, dateKey) => {
+  const tasks = Array.isArray(child.tasks) ? child.tasks : []
+  const dailyHistory = child.dailyHistory?.[dateKey]
+  const currentCompletedTasks = child.lastLoginDate === dateKey
+    ? tasks.filter((task) => task.completed)
+    : []
+  const completedTasks = Number(dailyHistory?.totalTasks ?? child.history?.[dateKey] ?? currentCompletedTasks.length)
+  const points = Number(dailyHistory?.totalPoints ?? currentCompletedTasks.reduce((sum, task) => sum + Number(task.points || 0), 0))
+
+  return {
+    date: dateKey,
+    completedTasks,
+    points,
+  }
+}
+
+const summarizeRecentDays = (child, endDateKey, days = 7) => {
+  return Array.from({ length: days }, (_, index) => {
+    const offset = index - (days - 1)
+    return summarizeDay(child, addDays(endDateKey, offset))
+  })
+}
+
 const summarizeChild = (child, dateKey) => {
   const tasks = Array.isArray(child.tasks) ? child.tasks : []
   const dailyHistory = child.dailyHistory?.[dateKey]
@@ -79,6 +108,7 @@ const summarizeChild = (child, dateKey) => {
     totalTasksCompleted: Number(child.stats?.totalTasksCompleted || 0),
     totalPointsEarned: Number(child.stats?.totalPointsEarned || 0),
     unlockedBadges: Array.isArray(child.unlockedBadges) ? child.unlockedBadges.length : 0,
+    recentDays: summarizeRecentDays(child, dateKey),
     detailSource,
     completedTasks: completedTasks.map((task) => ({
       id: task.id,

@@ -27,6 +27,11 @@ interface ChildStats {
     points: number;
     category: string;
   }>;
+  recentDays: Array<{
+    date: string;
+    completedTasks: number;
+    points: number;
+  }>;
   detailSource: 'dailyHistory' | 'currentTasks' | 'summaryOnly' | 'none';
 }
 
@@ -63,6 +68,55 @@ const formatPoints = (value: number) => value > 0 ? `+${value}` : `${value}`;
 const maskOpenid = (openid: string) => {
   if (openid.length <= 12) return openid;
   return `${openid.slice(0, 8)}...${openid.slice(-6)}`;
+};
+
+const RecentTasksChart: React.FC<{ days: ChildStats['recentDays'] }> = ({ days }) => {
+  const width = 560;
+  const height = 176;
+  const padding = { top: 18, right: 18, bottom: 38, left: 34 };
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+  const maxTasks = Math.max(1, ...days.map(day => day.completedTasks));
+  const points = days.map((day, index) => {
+    const x = padding.left + (days.length === 1 ? 0 : (chartWidth * index) / (days.length - 1));
+    const y = padding.top + chartHeight - (day.completedTasks / maxTasks) * chartHeight;
+    return { ...day, x, y };
+  });
+  const linePoints = points.map(point => `${point.x},${point.y}`).join(' ');
+  const yTicks = Array.from(new Set([0, Math.ceil(maxTasks / 2), maxTasks]));
+
+  return (
+    <div className="mt-4 rounded-md border border-gray-100 p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-sm font-bold text-gray-700">最近 7 天任务完成数量</p>
+        <p className="text-xs text-gray-500">单位：个任务</p>
+      </div>
+      <svg className="h-auto w-full" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="最近 7 天任务完成数量折线图">
+        <rect x="0" y="0" width={width} height={height} rx="8" fill="#FAFAF9" />
+        {yTicks.map((tick) => {
+          const y = padding.top + chartHeight - (tick / maxTasks) * chartHeight;
+          return (
+            <g key={tick}>
+              <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#E5E7EB" strokeWidth="1" />
+              <text x={padding.left - 10} y={y + 4} textAnchor="end" fontSize="11" fill="#6B7280">{tick}</text>
+            </g>
+          );
+        })}
+        <polyline points={linePoints} fill="none" stroke="#FF6348" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+        {points.map((point) => (
+          <g key={point.date}>
+            <circle cx={point.x} cy={point.y} r="5" fill="#FF6348" />
+            <text x={point.x} y={point.y - 10} textAnchor="middle" fontSize="11" fontWeight="700" fill="#1F2933">
+              {point.completedTasks}
+            </text>
+            <text x={point.x} y={height - 16} textAnchor="middle" fontSize="11" fill="#6B7280">
+              {point.date.slice(5)}
+            </text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
 };
 
 const StatsDashboard: React.FC = () => {
@@ -311,6 +365,8 @@ const StatsDashboard: React.FC = () => {
                     <p className="mt-1 text-xl font-bold">{child.totalPointsEarned}</p>
                   </div>
                 </div>
+
+                <RecentTasksChart days={child.recentDays || []} />
 
                 <div className="mt-4 overflow-hidden rounded-md border border-gray-100">
                   <div className="grid grid-cols-[1fr_80px_80px] bg-gray-50 px-3 py-2 text-xs font-bold text-gray-500">
