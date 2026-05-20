@@ -17,6 +17,7 @@ export default function ParentPage() {
   const [selectedChildId, setSelectedChildId] = useState(activeChild?.id || '')
   const [customTaskName, setCustomTaskName] = useState('')
   const [customTaskPoints, setCustomTaskPoints] = useState('10')
+  const [customTaskPointSign, setCustomTaskPointSign] = useState<1 | -1>(1)
   const [customRewardName, setCustomRewardName] = useState('')
   const [customRewardCost, setCustomRewardCost] = useState('50')
   const [showCustomTask, setShowCustomTask] = useState(false)
@@ -209,12 +210,18 @@ export default function ParentPage() {
   }
 
   // 任务管理
+  const handleCustomTaskPointsInput = (value: string) => {
+    const numericValue = value.replace(/\D/g, '').slice(0, 3)
+    setCustomTaskPoints(numericValue)
+  }
+
   const handleAddCustomTask = async () => {
     const child = getOperatingChild()
     if (!child) return
 
     const name = customTaskName.trim()
-    const points = parseInt(customTaskPoints)
+    const pointValue = parseInt(customTaskPoints)
+    const points = Number.isNaN(pointValue) ? NaN : pointValue * customTaskPointSign
 
     if (!name) {
       Taro.showToast({ title: '请输入任务名称', icon: 'none' })
@@ -263,6 +270,7 @@ export default function ParentPage() {
             await addTask(newTask)
             setCustomTaskName('')
             setCustomTaskPoints('10')
+            setCustomTaskPointSign(1)
             setShowCustomTask(false)
             Taro.showToast({ title: '添加成功', icon: 'success' })
           } catch (e) {
@@ -629,13 +637,24 @@ export default function ParentPage() {
                       placeholder='例如：练钢琴30分钟'
                     />
                     <Text className='input-label'>积分</Text>
-                    <Input
-                      className='custom-input'
-                      type='text'
-                      value={customTaskPoints}
-                      onInput={(e) => setCustomTaskPoints(e.detail.value)}
-                      placeholder='-100 到 100，负数表示扣分'
-                    />
+                    <View className='points-input-row'>
+                      <View
+                        className={`sign-toggle ${customTaskPointSign < 0 ? 'negative' : 'positive'}`}
+                        onClick={() => setCustomTaskPointSign(customTaskPointSign < 0 ? 1 : -1)}
+                      >
+                        <Text>{customTaskPointSign < 0 ? '扣分' : '加分'}</Text>
+                      </View>
+                      <Input
+                        className='custom-input points-input'
+                        type='number'
+                        value={customTaskPoints}
+                        onInput={(e) => handleCustomTaskPointsInput(e.detail.value)}
+                        placeholder='1 到 100'
+                      />
+                    </View>
+                    <Text className='points-preview'>
+                      当前设置：{formatSignedPoints((parseInt(customTaskPoints) || 0) * customTaskPointSign)} 积分
+                    </Text>
                     <View className='confirm-btn' onClick={handleAddCustomTask}>
                       <Text>确认添加</Text>
                     </View>
