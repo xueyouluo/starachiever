@@ -26,8 +26,8 @@ interface ChildStats {
     icon?: string;
     points: number;
     category: string;
-    completedTime: string | null;
   }>;
+  detailSource: 'dailyHistory' | 'currentTasks' | 'summaryOnly' | 'none';
 }
 
 interface UserSummary {
@@ -313,23 +313,30 @@ const StatsDashboard: React.FC = () => {
                 </div>
 
                 <div className="mt-4 overflow-hidden rounded-md border border-gray-100">
-                  <div className="grid grid-cols-[1fr_90px_120px] bg-gray-50 px-3 py-2 text-xs font-bold text-gray-500">
+                  <div className="grid grid-cols-[1fr_80px_80px] bg-gray-50 px-3 py-2 text-xs font-bold text-gray-500">
                     <span>当天任务</span>
-                    <span>积分</span>
-                    <span>完成时间</span>
+                    <span>得分</span>
+                    <span>扣分</span>
                   </div>
                   {child.completedTasks.length === 0 ? (
-                    <div className="px-3 py-4 text-sm text-gray-500">这一天还没有完成任务。</div>
+                    <div className="px-3 py-4 text-sm text-gray-500">
+                      {child.todayCompletedTasks > 0 || child.todayPoints !== 0
+                        ? `这一天有汇总记录：完成 ${child.todayCompletedTasks} 个任务，积分变化 ${formatPoints(child.todayPoints)}，但旧数据没有保存任务明细。`
+                        : '这一天还没有完成任务。'}
+                    </div>
                   ) : (
                     child.completedTasks.map((task) => (
-                      <div key={`${child.id}-${task.id}-${task.completedTime || ''}`} className="grid grid-cols-[1fr_90px_120px] border-t border-gray-100 px-3 py-2 text-sm">
+                      <div key={`${child.id}-${task.id}`} className="grid grid-cols-[1fr_80px_80px] border-t border-gray-100 px-3 py-2 text-sm">
                         <span className="truncate">{task.icon || '⭐'} {task.title}</span>
-                        <span className={task.points < 0 ? 'font-bold text-red-600' : 'font-bold text-green-700'}>{formatPoints(task.points)}</span>
-                        <span className="text-gray-500">{task.completedTime ? new Date(task.completedTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
+                        <span className="font-bold text-green-700">{task.points > 0 ? `+${task.points}` : '-'}</span>
+                        <span className="font-bold text-red-600">{task.points < 0 ? task.points : '-'}</span>
                       </div>
                     ))
                   )}
                 </div>
+                {child.detailSource === 'summaryOnly' && (
+                  <p className="mt-2 text-xs text-gray-500">该日期只有汇总数据，没有任务明细；新版小程序后续完成的任务会保存明细。</p>
+                )}
               </section>
             ))}
           </div>

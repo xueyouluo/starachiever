@@ -37,6 +37,15 @@ const summarizeChild = (child, dateKey) => {
   const completedTasksFromCurrentState = child.lastLoginDate === dateKey
     ? tasks.filter((task) => task.completed)
     : []
+  const fallbackCompletedTaskCount = completedTasksFromDailyHistory.length || completedTasksFromCurrentState.length
+  const todayCompletedTasks = Number(dailyHistory?.totalTasks ?? child.history?.[dateKey] ?? fallbackCompletedTaskCount)
+  const detailSource = completedTasksFromDailyHistory.length > 0
+    ? 'dailyHistory'
+    : completedTasksFromCurrentState.length > 0
+      ? 'currentTasks'
+      : todayCompletedTasks > 0
+        ? 'summaryOnly'
+        : 'none'
   const completedTasks = completedTasksFromDailyHistory.length > 0
     ? completedTasksFromDailyHistory
     : completedTasksFromCurrentState.map((task) => ({
@@ -47,7 +56,6 @@ const summarizeChild = (child, dateKey) => {
         category: getTaskCategoryName(task),
       }))
 
-  const todayCompletedTasks = Number(dailyHistory?.totalTasks ?? child.history?.[dateKey] ?? completedTasks.length)
   const todayPoints = Number(dailyHistory?.totalPoints ?? completedTasks.reduce((sum, task) => sum + Number(task.points || 0), 0))
   const redemptions = Array.isArray(child.redemptions) ? child.redemptions : []
   const todayRedemptions = redemptions.filter((redemption) => {
@@ -71,13 +79,13 @@ const summarizeChild = (child, dateKey) => {
     totalTasksCompleted: Number(child.stats?.totalTasksCompleted || 0),
     totalPointsEarned: Number(child.stats?.totalPointsEarned || 0),
     unlockedBadges: Array.isArray(child.unlockedBadges) ? child.unlockedBadges.length : 0,
+    detailSource,
     completedTasks: completedTasks.map((task) => ({
       id: task.id,
       title: task.title,
       icon: task.icon,
       points: Number(task.points || 0),
       category: getTaskCategoryName(task),
-      completedTime: task.completedTime || null,
     })),
   }
 }
