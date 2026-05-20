@@ -119,6 +119,69 @@ const RecentTasksChart: React.FC<{ days: ChildStats['recentDays'] }> = ({ days }
   );
 };
 
+const DailyTaskGroups: React.FC<{ child: ChildStats }> = ({ child }) => {
+  const positiveTasks = child.completedTasks.filter(task => task.points > 0);
+  const negativeTasks = child.completedTasks.filter(task => task.points < 0);
+  const zeroPointTasks = child.completedTasks.filter(task => task.points === 0);
+
+  const renderTaskGroup = (
+    title: string,
+    tasks: ChildStats['completedTasks'],
+    tone: 'positive' | 'negative' | 'neutral',
+  ) => {
+    const total = tasks.reduce((sum, task) => sum + task.points, 0);
+    const titleColor = tone === 'positive' ? 'text-green-700' : tone === 'negative' ? 'text-red-600' : 'text-gray-600';
+    const badgeColor = tone === 'positive' ? 'bg-green-50 text-green-700' : tone === 'negative' ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-600';
+
+    return (
+      <section className="rounded-md border border-gray-100 bg-white">
+        <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-3 py-2">
+          <h4 className={`text-sm font-bold ${titleColor}`}>{title}</h4>
+          <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${badgeColor}`}>
+            {tasks.length} 项 · {formatPoints(total)}
+          </span>
+        </div>
+        {tasks.length === 0 ? (
+          <div className="px-3 py-4 text-sm text-gray-500">无记录</div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {tasks.map((task) => (
+              <div key={`${child.id}-${title}-${task.id}`} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                <span className="min-w-0 flex-1 truncate">{task.icon || '⭐'} {task.title}</span>
+                <span className={`font-bold ${task.points < 0 ? 'text-red-600' : task.points > 0 ? 'text-green-700' : 'text-gray-500'}`}>
+                  {formatPoints(task.points)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    );
+  };
+
+  return (
+    <div className="mt-4">
+      <div className="mb-2 flex items-center justify-between">
+        <h4 className="text-sm font-bold text-gray-700">当天任务明细</h4>
+        <span className="text-xs text-gray-500">按积分类型分组</span>
+      </div>
+      {child.completedTasks.length === 0 ? (
+        <div className="rounded-md border border-gray-100 px-3 py-4 text-sm text-gray-500">
+          {child.todayCompletedTasks > 0 || child.todayPoints !== 0
+            ? `这一天有汇总记录：完成 ${child.todayCompletedTasks} 个任务，积分变化 ${formatPoints(child.todayPoints)}，但旧数据没有保存任务明细。`
+            : '这一天还没有完成任务。'}
+        </div>
+      ) : (
+        <div className="grid gap-3">
+          {renderTaskGroup('得分任务', positiveTasks, 'positive')}
+          {renderTaskGroup('扣分任务', negativeTasks, 'negative')}
+          {zeroPointTasks.length > 0 && renderTaskGroup('零分任务', zeroPointTasks, 'neutral')}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const StatsDashboard: React.FC = () => {
   const [apiBaseUrl, setApiBaseUrl] = useState(() => localStorage.getItem(API_STORAGE_KEY) || DEFAULT_API_BASE_URL);
   const [adminToken, setAdminToken] = useState(() => localStorage.getItem(TOKEN_STORAGE_KEY) || '');
@@ -368,28 +431,7 @@ const StatsDashboard: React.FC = () => {
 
                 <RecentTasksChart days={child.recentDays || []} />
 
-                <div className="mt-4 overflow-hidden rounded-md border border-gray-100">
-                  <div className="grid grid-cols-[1fr_80px_80px] bg-gray-50 px-3 py-2 text-xs font-bold text-gray-500">
-                    <span>当天任务</span>
-                    <span>得分</span>
-                    <span>扣分</span>
-                  </div>
-                  {child.completedTasks.length === 0 ? (
-                    <div className="px-3 py-4 text-sm text-gray-500">
-                      {child.todayCompletedTasks > 0 || child.todayPoints !== 0
-                        ? `这一天有汇总记录：完成 ${child.todayCompletedTasks} 个任务，积分变化 ${formatPoints(child.todayPoints)}，但旧数据没有保存任务明细。`
-                        : '这一天还没有完成任务。'}
-                    </div>
-                  ) : (
-                    child.completedTasks.map((task) => (
-                      <div key={`${child.id}-${task.id}`} className="grid grid-cols-[1fr_80px_80px] border-t border-gray-100 px-3 py-2 text-sm">
-                        <span className="truncate">{task.icon || '⭐'} {task.title}</span>
-                        <span className="font-bold text-green-700">{task.points > 0 ? `+${task.points}` : '-'}</span>
-                        <span className="font-bold text-red-600">{task.points < 0 ? task.points : '-'}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
+                <DailyTaskGroups child={child} />
                 {child.detailSource === 'summaryOnly' && (
                   <p className="mt-2 text-xs text-gray-500">该日期只有汇总数据，没有任务明细；新版小程序后续完成的任务会保存明细。</p>
                 )}
