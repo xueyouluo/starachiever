@@ -32,7 +32,7 @@ npm run dev:weapp
 ### 构建生产版本
 
 ```bash
-npm run build:weapp
+STARACHIEVER_API_BASE_URL=https://stars.followllm.online npm run build:weapp
 ```
 
 ## 项目结构
@@ -46,28 +46,49 @@ miniprogram/
 │   │   ├── profile/     # 个人档案
 │   │   └── select-child/# 孩子选择
 │   ├── components/      # 公共组件
-│   ├── services/        # 服务层（存储、云数据库）
+│   ├── services/        # 服务层（本地存储、自有服务器同步）
 │   ├── store/           # 状态管理（Zustand）
 │   ├── utils/           # 工具函数
 │   └── types.ts         # 类型定义
-├── cloudfunctions/      # 云函数
-│   ├── login/           # 获取用户 openid
-│   └── gemini/          # AI 服务
 └── config/              # 配置文件
 ```
 
 ## 自有服务器同步配置
 
-1. 部署仓库根目录下的 `server/` Node.js API 服务
-2. 为 API 域名配置 HTTPS
-3. 在微信小程序管理后台把 API 域名加入 `request合法域名`
-4. 构建小程序时设置 API 地址：
+当前生产 API 地址：
 
-```bash
-STARACHIEVER_API_BASE_URL=https://api.example.com npm run build:weapp
+```text
+https://stars.followllm.online
 ```
 
-未设置时会使用占位域名 `https://your-domain.example.com`，需要在正式发布前替换。
+小程序上传前需要完成两项配置：
+
+1. 微信小程序后台添加 request 合法域名：
+
+```text
+https://stars.followllm.online
+```
+
+2. 构建小程序时注入 API 地址：
+
+```bash
+STARACHIEVER_API_BASE_URL=https://stars.followllm.online npm run build:weapp
+```
+
+注意：
+- 微信后台只填写域名，不要带 `/api/health` 或其它路径。
+- 正式上传不要使用 `http://47.97.157.160:3001`。
+- 未设置 `STARACHIEVER_API_BASE_URL` 时会使用占位域名 `https://your-domain.example.com`，无法用于正式环境。
+- 数据同步是本地优先：本地有数据时直接上传服务器；只有本地没有数据时才从服务器恢复。
+
+当前 API 请求路径：
+
+```text
+POST /api/auth/wechat
+GET  /api/data
+PUT  /api/data
+GET  /api/health
+```
 
 ## 数据迁移
 
