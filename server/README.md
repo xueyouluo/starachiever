@@ -29,6 +29,7 @@ The server process listens on port `3001`; nginx terminates HTTPS and proxies `s
 - `HOST`: bind host, defaults to `0.0.0.0`
 - `DATABASE_PATH`: SQLite database file path
 - `JWT_SECRET`: long random secret for API tokens
+- `ADMIN_READ_TOKEN`: token for read-only web stats admin endpoints; defaults to `JWT_SECRET` if omitted
 - `WECHAT_APP_ID`: mini-program AppID
 - `WECHAT_APP_SECRET`: mini-program AppSecret
 - `WECHAT_AUTH_MOCK`: set `true` only for local tests
@@ -39,6 +40,8 @@ The server process listens on port `3001`; nginx terminates HTTPS and proxies `s
 - `POST /api/auth/wechat` with `{ "code": "wx.login code" }`
 - `GET /api/data` with `Authorization: Bearer <token>`
 - `PUT /api/data` with `Authorization: Bearer <token>` and `{ "data": { "children": [], "activeChildId": null } }`
+- `GET /api/admin/users?date=YYYY-MM-DD` with `Authorization: Bearer <ADMIN_READ_TOKEN>`
+- `GET /api/admin/users/:openid/stats?date=YYYY-MM-DD` with `Authorization: Bearer <ADMIN_READ_TOKEN>`
 
 The mini-program uses local-first sync:
 

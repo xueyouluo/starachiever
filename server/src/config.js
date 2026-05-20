@@ -20,6 +20,7 @@ export const loadConfig = (env = process.env) => {
     port: Number(env.PORT || 3001),
     databasePath: path.resolve(env.DATABASE_PATH || './data/starachiever.sqlite'),
     jwtSecret,
+    adminReadToken: env.ADMIN_READ_TOKEN || jwtSecret,
     tokenTtlSeconds: Number(env.JWT_TTL_SECONDS || 7 * 24 * 60 * 60),
     wechatAppId: env.WECHAT_APP_ID || '',
     wechatAppSecret: env.WECHAT_APP_SECRET || '',

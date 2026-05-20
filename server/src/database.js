@@ -38,6 +38,14 @@ export const createRepository = (db) => {
     WHERE openid = ?
   `)
 
+  const listSnapshotsStatement = db.prepare(`
+    SELECT u.openid, u.created_at, u.updated_at,
+           s.data_json, s.data_version, s.client_updated_at, s.server_updated_at
+    FROM users u
+    LEFT JOIN user_snapshots s ON s.openid = u.openid
+    ORDER BY COALESCE(s.server_updated_at, u.updated_at) DESC
+  `)
+
   const saveSnapshotStatement = db.prepare(`
     INSERT INTO user_snapshots (openid, data_json, data_version, client_updated_at, server_updated_at)
     VALUES (?, ?, ?, ?, ?)
@@ -64,6 +72,18 @@ export const createRepository = (db) => {
         clientUpdatedAt: row.client_updated_at,
         serverUpdatedAt: row.server_updated_at,
       }
+    },
+
+    listSnapshots() {
+      return listSnapshotsStatement.all().map((row) => ({
+        openid: row.openid,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        data: row.data_json ? JSON.parse(row.data_json) : null,
+        dataVersion: row.data_version,
+        clientUpdatedAt: row.client_updated_at,
+        serverUpdatedAt: row.server_updated_at,
+      }))
     },
 
     saveSnapshot(openid, { data, dataVersion = 'v6', clientUpdatedAt }) {

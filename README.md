@@ -53,6 +53,40 @@ STARACHIEVER_API_BASE_URL=https://stars.followllm.online npm run build:weapp
 
 同步策略是本地优先：本地有数据时上传到服务器；只有本地没有数据时才从服务器恢复。
 
+## Web 统计看板
+
+Web 版提供独立统计页：
+
+```text
+/stats
+```
+
+看板用于查看服务器快照里的儿童打卡统计，包括当前积分、当天完成任务数、当天积分变化和任务明细。访问时需要输入服务端 `ADMIN_READ_TOKEN`，避免公开孩子数据。
+
+本地运行：
+
+```bash
+npm run dev
+```
+
+打开：
+
+```text
+http://localhost:3000/stats
+```
+
+生产环境默认请求：
+
+```text
+https://stars.followllm.online
+```
+
+如需覆盖 API 地址，可在构建 Web 时设置：
+
+```bash
+VITE_STARACHIEVER_API_BASE_URL=https://stars.followllm.online npm run build
+```
+
 ## 项目结构
 
 ```
