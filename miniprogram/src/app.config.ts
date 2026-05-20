@@ -1,5 +1,4 @@
 export default {
-  cloud: true,
   pages: [
     'pages/index/index',
     'pages/calendar/index',

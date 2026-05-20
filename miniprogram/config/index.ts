@@ -22,7 +22,11 @@ export default defineConfig({
   },
   sourceRoot: 'src',
   outputRoot: 'dist',
-  defineConstants: {},
+  defineConstants: {
+    __STARACHIEVER_API_BASE_URL__: JSON.stringify(
+      process.env.STARACHIEVER_API_BASE_URL || 'https://your-domain.example.com'
+    )
+  },
   copy: {
     patterns: [],
     options: {}

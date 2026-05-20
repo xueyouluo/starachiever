@@ -9,7 +9,7 @@
 - ✅ 积分奖励：完成任务获得积分，兑换奖励
 - ✅ 成就系统：解锁勋章，激励孩子持续进步
 - ✅ 日历统计：可视化查看完成记录
-- ✅ 云端备份：微信云开发自动备份数据
+- ✅ 云端备份：自有服务器自动备份数据
 - ✅ AI 助手：智能鼓励语和活动建议
 
 ## 开发指南
@@ -56,13 +56,18 @@ miniprogram/
 └── config/              # 配置文件
 ```
 
-## 云开发配置
+## 自有服务器同步配置
 
-1. 在微信小程序管理后台开通云开发
-2. 创建云开发环境，获取环境 ID
-3. 在 `src/services/cloud.ts` 中配置环境 ID
-4. 部署云函数（login 和 gemini）
-5. 创建数据库集合 `users`
+1. 部署仓库根目录下的 `server/` Node.js API 服务
+2. 为 API 域名配置 HTTPS
+3. 在微信小程序管理后台把 API 域名加入 `request合法域名`
+4. 构建小程序时设置 API 地址：
+
+```bash
+STARACHIEVER_API_BASE_URL=https://api.example.com npm run build:weapp
+```
+
+未设置时会使用占位域名 `https://your-domain.example.com`，需要在正式发布前替换。
 
 ## 数据迁移
 
@@ -76,7 +81,7 @@ miniprogram/
 - **框架**：Taro 4.1 + React 18
 - **状态管理**：Zustand
 - **样式**：SCSS
-- **云开发**：微信云开发
+- **云端同步**：自有 Node.js API
 - **类型**：TypeScript
 
 ## 待完成功能

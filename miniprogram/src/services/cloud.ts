@@ -1,80 +1,61 @@
-import Taro from '@tarojs/taro'
-import { StorageData } from './storage'
+import { apiClient } from './apiClient'
+import * as storage from './storage'
+import type { StorageData } from './storage'
 
-/**
- * 初始化云开发
- */
-export const initCloud = (): void => {
-  try {
-    if (Taro.cloud) {
-      Taro.cloud.init({
-        env: 'cloudbase-0gdzglds6ac28987',
-        traceUser: true
-      })
-      console.log('云开发初始化成功')
-    } else {
-      console.warn('当前环境不支持云开发')
-    }
-  } catch (e) {
-    console.error('云开发初始化失败', e)
-  }
+interface CloudSnapshot {
+  data: StorageData | null
+  dataVersion?: string
+  clientUpdatedAt?: string
+  serverUpdatedAt?: string
+}
+
+interface SyncResponse {
+  dataVersion: string
+  clientUpdatedAt: string
+  serverUpdatedAt: string
 }
 
 /**
- * 同步数据到云数据库
+ * 初始化自有服务器同步配置
+ */
+export const initCloud = (): void => {
+  console.log('自有服务器同步已启用')
+}
+
+/**
+ * 同步数据到自有服务器
  */
 export const syncToCloud = async (data: StorageData): Promise<void> => {
   try {
-    if (!Taro.cloud) {
-      console.warn('云开发未初始化，跳过云端同步')
-      return
-    }
-
-    const { result } = await Taro.cloud.callFunction({ name: 'login' })
-    const openid = (result as any).openid
-    if (!openid) throw new Error('获取 openid 失败')
-
-    const db = Taro.cloud.database()
-    await db.collection('users').doc(openid).set({
-      data: {
-        ...data,
-        updatedAt: new Date().toISOString()
-      }
+    const result = await apiClient.put<SyncResponse>('/api/data', {
+      data: storage.toCloudData(data),
+      dataVersion: 'v6',
+      clientUpdatedAt: data.localUpdatedAt || new Date().toISOString(),
     })
 
-    console.log('云端同步成功')
+    await storage.markSyncedAt(result.serverUpdatedAt)
+    console.log('服务器同步成功')
   } catch (e) {
-    console.error('云端同步失败', e)
+    console.error('服务器同步失败', e)
     throw e
   }
 }
 
 /**
- * 从云数据库恢复数据
+ * 从自有服务器恢复数据
  */
-export const restoreFromCloud = async (): Promise<StorageData | null> => {
+export const restoreFromCloud = async (): Promise<CloudSnapshot | null> => {
   try {
-    if (!Taro.cloud) {
-      console.warn('云开发未初始化')
+    const cloudData = await apiClient.get<CloudSnapshot>('/api/data')
+    if (!cloudData?.data) {
+      console.log('服务器无数据')
       return null
     }
 
-    const { result } = await Taro.cloud.callFunction({ name: 'login' })
-    const openid = (result as any).openid
-    if (!openid) return null
-
-    const db = Taro.cloud.database()
-    const { data: cloudData } = await (db.collection('users').doc(openid) as any).get()
-
-    if (!cloudData) {
-      console.log('云端无数据')
-      return null
-    }
-
-    console.log('云端数据恢复成功')
-    return cloudData as StorageData
+    console.log('服务器数据恢复成功')
+    return cloudData
   } catch (e) {
-    console.error('云端数据恢复失败', e)
+    console.error('服务器数据恢复失败', e)
     return null
   }
 }

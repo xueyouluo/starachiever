@@ -1,0 +1,1 @@
+declare const __STARACHIEVER_API_BASE_URL__: string

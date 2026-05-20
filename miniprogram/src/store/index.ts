@@ -4,13 +4,13 @@ import { syncToCloud, restoreFromCloud } from '../services/cloud'
 import { createDefaultChild } from '../constants'
 import { PET_TYPES, PET_ACTIONS } from '../constants/pets'
 import { applyTimeDecay, calcPetStage, getChildPets, withNormalizedChildPets } from '../utils/petUtils'
-import type { ChildProfile, PetActionType, Pet } from '../types'
+import type { Category, ChildProfile, PetActionType, Pet, PointRedemption, Reward, Task } from '../types'
 
 // 后台静默同步，不阻塞操作，失败不提示
 const backgroundSync = () => {
   storage.getData().then(data => {
     if (data) syncToCloud(data).catch((e) => {
-      console.error('[云端同步失败]', e)
+      console.error('[服务器同步失败]', e)
     })
   }).catch((e) => {
     console.error('[读取本地数据失败]', e)
@@ -85,7 +85,6 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const data = await storage.getData()
       if (data && data.children.length > 0) {
-        // 每日重置：检查每个孩子是否需要重置任务
         let anyChanged = false
         const updatedChildren = data.children.map(child => {
           const { child: resetChild, changed } = applyDailyReset(child)
@@ -93,9 +92,13 @@ export const useStore = create<AppState>((set, get) => ({
           return resetChild
         })
 
-        // 若有任何孩子被重置，持久化保存
+        const localData = {
+          ...data,
+          children: updatedChildren
+        }
+
         if (anyChanged) {
-          await storage.setData({ children: updatedChildren, activeChildId: data.activeChildId })
+          await storage.setData(localData)
         }
 
         const activeChild = updatedChildren.find(c => c.id === data.activeChildId) || updatedChildren[0]
@@ -103,16 +106,26 @@ export const useStore = create<AppState>((set, get) => ({
           children: updatedChildren,
           activeChild
         })
+
+        backgroundSync()
       } else {
-        // 本地无数据，先尝试从云端恢复
-        const cloudData = await restoreFromCloud()
-        if (cloudData && cloudData.children?.length > 0) {
-          const normalizedCloudData = storage.normalizeStorageData(cloudData)
-          await storage.setData(normalizedCloudData)
+        // 本地无数据，先尝试从服务器恢复
+        const cloudSnapshot = await restoreFromCloud()
+        if (cloudSnapshot?.data && cloudSnapshot.data.children?.length > 0) {
+          const normalizedCloudData = storage.normalizeStorageData({
+            ...cloudSnapshot.data,
+            lastSyncedAt: cloudSnapshot.serverUpdatedAt,
+            localUpdatedAt: cloudSnapshot.clientUpdatedAt || cloudSnapshot.serverUpdatedAt || null,
+          })
+          await storage.setData(normalizedCloudData, {
+            markLocalUpdate: false,
+            lastSyncedAt: cloudSnapshot.serverUpdatedAt || null,
+            localUpdatedAt: cloudSnapshot.clientUpdatedAt || cloudSnapshot.serverUpdatedAt || null,
+          })
           const activeChild = normalizedCloudData.children.find(c => c.id === normalizedCloudData.activeChildId) || normalizedCloudData.children[0]
           set({ children: normalizedCloudData.children, activeChild })
         } else {
-          // 云端也没有，首次使用，创建默认数据
+          // 服务器也没有，首次使用，创建默认数据
           const defaultChild = createDefaultChild('小宝贝', '👶')
           await storage.setData({
             children: [defaultChild],
@@ -122,22 +135,31 @@ export const useStore = create<AppState>((set, get) => ({
             children: [defaultChild],
             activeChild: defaultChild
           })
+          backgroundSync()
         }
       }
     } catch (e) {
       console.error('初始化失败', e)
-      // 出错时先尝试从云端恢复
+      // 出错时先尝试从服务器恢复
       try {
-        const cloudData = await restoreFromCloud()
-        if (cloudData && cloudData.children?.length > 0) {
-          const normalizedCloudData = storage.normalizeStorageData(cloudData)
-          await storage.setData(normalizedCloudData)
+        const cloudSnapshot = await restoreFromCloud()
+        if (cloudSnapshot?.data && cloudSnapshot.data.children?.length > 0) {
+          const normalizedCloudData = storage.normalizeStorageData({
+            ...cloudSnapshot.data,
+            lastSyncedAt: cloudSnapshot.serverUpdatedAt,
+            localUpdatedAt: cloudSnapshot.clientUpdatedAt || cloudSnapshot.serverUpdatedAt || null,
+          })
+          await storage.setData(normalizedCloudData, {
+            markLocalUpdate: false,
+            lastSyncedAt: cloudSnapshot.serverUpdatedAt || null,
+            localUpdatedAt: cloudSnapshot.clientUpdatedAt || cloudSnapshot.serverUpdatedAt || null,
+          })
           const activeChild = normalizedCloudData.children.find(c => c.id === normalizedCloudData.activeChildId) || normalizedCloudData.children[0]
           set({ children: normalizedCloudData.children, activeChild })
           return
         }
       } catch {}
-      // 云端也失败，创建默认数据
+      // 服务器也失败，创建默认数据
       const defaultChild = createDefaultChild('小宝贝', '👶')
       await storage.setData({ children: [defaultChild], activeChildId: defaultChild.id })
       set({ children: [defaultChild], activeChild: defaultChild })
