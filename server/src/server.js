@@ -30,6 +30,12 @@ const getTaskCategoryName = (task) => {
   return task.category.name || '其他'
 }
 
+const getTaskCompletedTimeValue = (task) => {
+  if (typeof task?.completedTime !== 'string') return 0
+  const value = Date.parse(task.completedTime)
+  return Number.isNaN(value) ? 0 : value
+}
+
 const addDays = (dateKey, offset) => {
   const date = new Date(`${dateKey}T00:00:00.000Z`)
   date.setUTCDate(date.getUTCDate() + offset)
@@ -83,6 +89,7 @@ const summarizeChild = (child, dateKey) => {
         icon: task.icon,
         points: task.points,
         category: getTaskCategoryName(task),
+        completedTime: null,
       }))
 
   const todayPoints = Number(dailyHistory?.totalPoints ?? completedTasks.reduce((sum, task) => sum + Number(task.points || 0), 0))
@@ -110,12 +117,13 @@ const summarizeChild = (child, dateKey) => {
     unlockedBadges: Array.isArray(child.unlockedBadges) ? child.unlockedBadges.length : 0,
     recentDays: summarizeRecentDays(child, dateKey),
     detailSource,
-    completedTasks: completedTasks.map((task) => ({
+    completedTasks: [...completedTasks].sort((a, b) => getTaskCompletedTimeValue(b) - getTaskCompletedTimeValue(a)).map((task) => ({
       id: task.id,
       title: task.title,
       icon: task.icon,
       points: Number(task.points || 0),
       category: getTaskCategoryName(task),
+      completedTime: typeof task.completedTime === 'string' ? task.completedTime : null,
     })),
   }
 }

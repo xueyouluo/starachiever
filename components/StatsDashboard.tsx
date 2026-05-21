@@ -26,6 +26,7 @@ interface ChildStats {
     icon?: string;
     points: number;
     category: string;
+    completedTime?: string | null;
   }>;
   recentDays: Array<{
     date: string;
@@ -61,6 +62,13 @@ const todayKey = () => new Date().toISOString().slice(0, 10);
 const formatTime = (value?: string | null) => {
   if (!value) return '暂无';
   return new Date(value).toLocaleString('zh-CN', { hour12: false });
+};
+
+const formatTaskTime = (value?: string | null) => {
+  if (!value) return '--:--';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '--:--';
+  return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
 };
 
 const formatPoints = (value: number) => value > 0 ? `+${value}` : `${value}`;
@@ -148,6 +156,7 @@ const DailyTaskGroups: React.FC<{ child: ChildStats }> = ({ child }) => {
             {tasks.map((task) => (
               <div key={`${child.id}-${title}-${task.id}`} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
                 <span className="min-w-0 flex-1 truncate">{task.icon || '⭐'} {task.title}</span>
+                <span className="shrink-0 tabular-nums text-xs font-semibold text-gray-500">{formatTaskTime(task.completedTime)}</span>
                 <span className={`font-bold ${task.points < 0 ? 'text-red-600' : task.points > 0 ? 'text-green-700' : 'text-gray-500'}`}>
                   {formatPoints(task.points)}
                 </span>
@@ -375,9 +384,9 @@ const StatsDashboard: React.FC = () => {
 
               {totals && (
                 <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-md bg-[#FFF0EC] p-4">
-                    <p className="text-xs font-semibold text-gray-500">当前总积分</p>
-                    <p className="mt-2 text-2xl font-bold text-[#FF6348]">{totals.points}</p>
+                  <div className="rounded-md border border-red-200 bg-red-50 p-4">
+                    <p className="text-xs font-bold text-red-700">当前总积分</p>
+                    <p className="mt-2 text-4xl font-black text-red-600">{totals.points}</p>
                   </div>
                   <div className="rounded-md bg-[#EEF7FF] p-4">
                     <p className="text-xs font-semibold text-gray-500">当天完成任务</p>
@@ -405,8 +414,8 @@ const StatsDashboard: React.FC = () => {
                       <p className="text-sm text-gray-500">最后登录：{child.lastLoginDate || '暂无'} · 连续 {child.currentStreak} 天</p>
                     </div>
                   </div>
-                  <div className="rounded-md bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-600">
-                    当前积分 {child.totalPoints}
+                  <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+                    当前积分 <span className="ml-1 text-2xl font-black text-red-600">{child.totalPoints}</span>
                   </div>
                 </div>
 

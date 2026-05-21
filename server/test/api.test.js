@@ -150,8 +150,11 @@ test('admin stats endpoints require admin token and summarize snapshots', async 
     headers: { authorization: 'Bearer admin-secret' },
   })
   assert.equal(statsResponse.statusCode, 200)
-  assert.equal(statsResponse.json().user.children[0].todayPoints, 3)
-  assert.equal(statsResponse.json().user.children[0].completedTasks.length, 2)
-  assert.equal(statsResponse.json().user.children[0].recentDays.length, 7)
-  assert.equal(statsResponse.json().user.children[0].recentDays.at(-1).completedTasks, 2)
+  const childStats = statsResponse.json().user.children[0]
+  assert.equal(childStats.todayPoints, 3)
+  assert.equal(childStats.completedTasks.length, 2)
+  assert.equal(childStats.completedTasks[0].id, 'task-b')
+  assert.equal(childStats.completedTasks[0].completedTime, '2026-05-20T02:00:00.000Z')
+  assert.equal(childStats.recentDays.length, 7)
+  assert.equal(childStats.recentDays.at(-1).completedTasks, 2)
 })

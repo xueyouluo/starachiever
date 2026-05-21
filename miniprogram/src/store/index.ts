@@ -212,8 +212,10 @@ export const useStore = create<AppState>((set, get) => ({
       }
     }
 
-    // 更新 history（记录每天完成任务次数）
     const today = new Date().toISOString().split('T')[0]
+    const completedTime = new Date().toISOString()
+
+    // 更新 history（记录每天完成任务次数）
     const updatedHistory = { ...child.history }
     if (!updatedHistory[today]) {
       updatedHistory[today] = 0
@@ -223,12 +225,44 @@ export const useStore = create<AppState>((set, get) => ({
       delete updatedHistory[today]
     }
 
+    // 更新 dailyHistory（记录每天完成任务明细和完成时间）
+    const dailyHistory = child.dailyHistory || {}
+    const todayHistory = dailyHistory[today] || { date: today, tasks: [], totalPoints: 0, totalTasks: 0 }
+    const existingTasks = Array.isArray(todayHistory.tasks) ? todayHistory.tasks : []
+    const nextTasks = isCompleting
+      ? [
+          ...existingTasks.filter(t => t.id !== task.id),
+          {
+            id: task.id,
+            title: task.title,
+            icon: task.icon,
+            points: task.points,
+            category: task.category,
+            completedTime
+          }
+        ]
+      : existingTasks.filter(t => t.id !== task.id)
+
+    const nextTodayHistory = {
+      date: today,
+      tasks: nextTasks,
+      totalPoints: nextTasks.reduce((sum, item) => sum + Number(item.points || 0), 0),
+      totalTasks: nextTasks.length
+    }
+    const updatedDailyHistory = { ...dailyHistory }
+    if (nextTodayHistory.totalTasks > 0 || nextTodayHistory.totalPoints !== 0) {
+      updatedDailyHistory[today] = nextTodayHistory
+    } else {
+      delete updatedDailyHistory[today]
+    }
+
     const updatedChild = {
       ...child,
       tasks: updatedTasks,
       totalPoints: newTotalPoints,
       stats: newStats,
-      history: updatedHistory
+      history: updatedHistory,
+      dailyHistory: updatedDailyHistory
     }
 
     // 检查成就解锁
