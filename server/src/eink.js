@@ -103,6 +103,9 @@ export const createEinkStatus = ({ snapshot, dateKey, options, summarizeSnapshot
 export const renderEinkHtml = (status) => {
   const { width, height, visibleChildren } = status
   const split = status.layout === 'split' && visibleChildren.length > 1
+  const screenPadding = Math.max(8, Math.floor(Math.min(width, height) * 0.035))
+  const headerHeight = Math.max(20, Math.floor(height * 0.095))
+  const gridGap = Math.max(6, Math.floor(Math.min(width, height) * 0.028))
 
   const childCards = visibleChildren.map((child) => {
     const maxChartValue = Math.max(1, ...child.recentDays.map((day) => day.completedTasks))
@@ -163,31 +166,31 @@ export const renderEinkHtml = (status) => {
     .screen {
       width: ${width}px;
       height: ${height}px;
-      padding: ${Math.max(8, Math.floor(Math.min(width, height) * 0.035))}px;
+      padding: ${screenPadding}px;
       background: #fff;
     }
     .topbar {
       display: flex;
       align-items: baseline;
       justify-content: space-between;
-      height: ${Math.max(28, Math.floor(height * 0.13))}px;
-      border-bottom: 3px solid #000;
+      height: ${headerHeight}px;
+      border-bottom: 2px solid #000;
       font-weight: 900;
     }
     .brand {
-      font-size: ${Math.max(18, Math.floor(height * 0.08))}px;
+      font-size: ${Math.max(15, Math.floor(height * 0.055))}px;
       line-height: 1;
     }
     .sync {
-      font-size: ${Math.max(12, Math.floor(height * 0.042))}px;
+      font-size: ${Math.max(10, Math.floor(height * 0.034))}px;
       line-height: 1;
     }
     .grid {
       display: grid;
       grid-template-columns: ${split ? '1fr 1fr' : '1fr'};
-      gap: ${Math.max(8, Math.floor(Math.min(width, height) * 0.035))}px;
-      height: calc(100% - ${Math.max(28, Math.floor(height * 0.13))}px);
-      padding-top: ${Math.max(8, Math.floor(Math.min(width, height) * 0.035))}px;
+      gap: ${gridGap}px;
+      height: calc(100% - ${headerHeight}px);
+      padding-top: ${gridGap}px;
     }
     .child-card {
       min-width: 0;
@@ -317,7 +320,7 @@ export const renderEinkHtml = (status) => {
 <body>
   <main class="screen">
     <header class="topbar">
-      <div class="brand">StarAchiever ${escapeXml(status.date)}</div>
+      <div class="brand">打卡之星 ${escapeXml(status.date)}</div>
       <div class="sync">同步 ${escapeXml(formatTime(status.serverUpdatedAt))}</div>
     </header>
     <div class="grid">${childCards || '<div class="empty">暂无儿童数据</div>'}</div>
