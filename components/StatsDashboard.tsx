@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 const DEFAULT_API_BASE_URL = (import.meta as any).env?.VITE_STARACHIEVER_API_BASE_URL || 'https://stars.followllm.online';
 const TOKEN_STORAGE_KEY = 'starachiever_stats_admin_token';
 const API_STORAGE_KEY = 'starachiever_stats_api_base_url';
+const EINK_DEVICE_TOKEN_STORAGE_KEY = 'starachiever_eink_device_token';
 
 interface ChildStats {
   id: string;
@@ -194,6 +195,15 @@ const DailyTaskGroups: React.FC<{ child: ChildStats }> = ({ child }) => {
 const StatsDashboard: React.FC = () => {
   const [apiBaseUrl, setApiBaseUrl] = useState(() => localStorage.getItem(API_STORAGE_KEY) || DEFAULT_API_BASE_URL);
   const [adminToken, setAdminToken] = useState(() => localStorage.getItem(TOKEN_STORAGE_KEY) || '');
+  const [einkDeviceToken, setEinkDeviceToken] = useState(() => localStorage.getItem(EINK_DEVICE_TOKEN_STORAGE_KEY) || '');
+  const [einkWidth, setEinkWidth] = useState(792);
+  const [einkHeight, setEinkHeight] = useState(272);
+  const [einkLayout, setEinkLayout] = useState<'auto' | 'single' | 'split'>('auto');
+  const [einkPage, setEinkPage] = useState(0);
+  const [einkUserToken, setEinkUserToken] = useState('');
+  const [einkImageUrl, setEinkImageUrl] = useState('');
+  const [isLoadingEink, setIsLoadingEink] = useState(false);
+  const [einkError, setEinkError] = useState('');
   const [date, setDate] = useState(todayKey());
   const [users, setUsers] = useState<UserSummary[]>([]);
   const [selectedOpenid, setSelectedOpenid] = useState('');
@@ -260,12 +270,57 @@ const StatsDashboard: React.FC = () => {
     }
   };
 
+  const loadEinkPreview = async () => {
+    if (!selectedOpenid) return;
+    setEinkError('');
+    setIsLoadingEink(true);
+    try {
+      localStorage.setItem(EINK_DEVICE_TOKEN_STORAGE_KEY, einkDeviceToken.trim());
+      const tokenResult = await request<{ userToken: string }>(`/api/admin/users/${encodeURIComponent(selectedOpenid)}/eink-token`);
+      setEinkUserToken(tokenResult.userToken);
+
+      const params = new URLSearchParams({
+        openid: selectedOpenid,
+        width: String(einkWidth),
+        height: String(einkHeight),
+        layout: einkLayout,
+        page: String(einkPage),
+        date,
+      });
+      const response = await fetch(`${normalizedApiBaseUrl}/api/eink/image.png?${params.toString()}`, {
+        headers: {
+          'X-Device-Token': einkDeviceToken.trim(),
+          'X-User-Token': tokenResult.userToken,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(response.status === 401 ? '设备 token 不正确' : `预览生成失败：${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const nextUrl = URL.createObjectURL(blob);
+      setEinkImageUrl((previousUrl) => {
+        if (previousUrl) URL.revokeObjectURL(previousUrl);
+        return nextUrl;
+      });
+    } catch (e) {
+      setEinkError(e instanceof Error ? e.message : '预览生成失败');
+    } finally {
+      setIsLoadingEink(false);
+    }
+  };
+
   useEffect(() => {
     if (selectedOpenid && adminToken.trim()) {
       loadStats(selectedOpenid);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedOpenid, date]);
+
+  useEffect(() => () => {
+    if (einkImageUrl) URL.revokeObjectURL(einkImageUrl);
+  }, [einkImageUrl]);
 
   const totals = selectedUser?.children.reduce(
     (acc, child) => ({
@@ -399,6 +454,113 @@ const StatsDashboard: React.FC = () => {
                   <div className="rounded-md bg-[#FFF8E6] p-4">
                     <p className="text-xs font-semibold text-gray-500">当天兑换次数</p>
                     <p className="mt-2 text-2xl font-bold text-[#B7791F]">{totals.redemptions}</p>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <section className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-black/5">
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <h2 className="text-lg font-bold">墨水屏预览</h2>
+                  <p className="mt-1 text-sm text-gray-500">生成 ESP32 可请求的三色图片预览，支持自定义分辨率。</p>
+                </div>
+                <button
+                  className="h-10 rounded-md bg-[#1F2933] px-4 text-sm font-bold text-white disabled:opacity-50"
+                  disabled={!selectedOpenid || !adminToken.trim() || !einkDeviceToken.trim() || isLoadingEink}
+                  onClick={loadEinkPreview}
+                >
+                  {isLoadingEink ? '生成中' : '生成预览'}
+                </button>
+              </div>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-[1fr_1fr_140px_140px_120px]">
+                <label className="flex flex-col gap-1 text-sm font-semibold text-gray-600">
+                  设备 token
+                  <input
+                    className="h-10 rounded-md border border-gray-200 px-3 text-sm font-normal outline-none focus:border-[#FF6348]"
+                    type="password"
+                    value={einkDeviceToken}
+                    onChange={(event) => setEinkDeviceToken(event.target.value)}
+                    placeholder="EINK_DEVICE_TOKEN"
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm font-semibold text-gray-600">
+                  分辨率
+                  <select
+                    className="h-10 rounded-md border border-gray-200 px-3 text-sm font-normal outline-none focus:border-[#FF6348]"
+                    value={`${einkWidth}x${einkHeight}`}
+                    onChange={(event) => {
+                      const [width, height] = event.target.value.split('x').map(Number);
+                      setEinkWidth(width);
+                      setEinkHeight(height);
+                    }}
+                  >
+                    <option value="792x272">792 x 272</option>
+                    <option value="800x480">800 x 480</option>
+                    <option value="400x300">400 x 300</option>
+                    <option value="296x128">296 x 128</option>
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-sm font-semibold text-gray-600">
+                  宽
+                  <input
+                    className="h-10 rounded-md border border-gray-200 px-3 text-sm font-normal outline-none focus:border-[#FF6348]"
+                    type="number"
+                    min={200}
+                    max={1600}
+                    value={einkWidth}
+                    onChange={(event) => setEinkWidth(Number(event.target.value))}
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm font-semibold text-gray-600">
+                  高
+                  <input
+                    className="h-10 rounded-md border border-gray-200 px-3 text-sm font-normal outline-none focus:border-[#FF6348]"
+                    type="number"
+                    min={100}
+                    max={1200}
+                    value={einkHeight}
+                    onChange={(event) => setEinkHeight(Number(event.target.value))}
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm font-semibold text-gray-600">
+                  页
+                  <input
+                    className="h-10 rounded-md border border-gray-200 px-3 text-sm font-normal outline-none focus:border-[#FF6348]"
+                    type="number"
+                    min={0}
+                    value={einkPage}
+                    onChange={(event) => setEinkPage(Number(event.target.value))}
+                  />
+                </label>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                {(['auto', 'split', 'single'] as const).map((layout) => (
+                  <button
+                    key={layout}
+                    className={`rounded-md border px-3 py-2 text-sm font-bold ${einkLayout === layout ? 'border-[#FF6348] bg-[#FFF0EC] text-[#FF6348]' : 'border-gray-200 text-gray-600'}`}
+                    onClick={() => setEinkLayout(layout)}
+                  >
+                    {layout === 'auto' ? '自动布局' : layout === 'split' ? '双人并排' : '单人分页'}
+                  </button>
+                ))}
+              </div>
+
+              {einkError && <div className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{einkError}</div>}
+
+              {einkImageUrl && (
+                <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+                  <div className="overflow-auto rounded-md border border-gray-200 bg-gray-100 p-3">
+                    <img className="max-w-none bg-white" src={einkImageUrl} width={einkWidth} height={einkHeight} alt="墨水屏预览" />
+                  </div>
+                  <div className="rounded-md bg-gray-50 p-3 text-xs text-gray-600">
+                    <p className="font-bold text-gray-800">设备请求</p>
+                    <p className="mt-2 break-all">GET /api/eink/image.png?openid={selectedOpenid}&width={einkWidth}&height={einkHeight}&layout={einkLayout}&page={einkPage}&date={date}</p>
+                    <p className="mt-2">Header: X-Device-Token</p>
+                    <p>Header: X-User-Token</p>
+                    {einkUserToken && <p className="mt-2 break-all">userToken: {einkUserToken}</p>}
                   </div>
                 </div>
               )}

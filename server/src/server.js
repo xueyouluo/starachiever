@@ -2,6 +2,15 @@ import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import { createToken, verifyToken } from './jwt.js'
 import { exchangeWechatCode } from './wechat.js'
+import {
+  createEinkStatus,
+  createEinkUserToken,
+  parseEinkOptions,
+  renderEinkHtml,
+  renderEinkPng,
+  renderEinkSvg,
+  verifyEinkUserToken,
+} from './eink.js'
 
 const isStorageData = (value) => {
   return Boolean(
@@ -216,6 +225,35 @@ export const createServer = ({ config, repository }) => {
     }
   })
 
+  const authenticateEinkRequest = (request, reply) => {
+    const query = request.query || {}
+    const deviceToken = request.headers['x-device-token'] || query.deviceToken
+    const userToken = request.headers['x-user-token'] || query.userToken
+    const openid = request.headers['x-openid'] || query.openid
+
+    if (!deviceToken || deviceToken !== config.einkDeviceToken) {
+      reply.code(401).send({ error: 'invalid device token' })
+      return null
+    }
+
+    if (!openid || !userToken || !verifyEinkUserToken({
+      openid,
+      token: userToken,
+      secret: config.einkUserTokenSecret,
+    })) {
+      reply.code(401).send({ error: 'invalid user token' })
+      return null
+    }
+
+    const snapshot = repository.listSnapshots().find((item) => item.openid === openid)
+    if (!snapshot) {
+      reply.code(404).send({ error: 'user not found' })
+      return null
+    }
+
+    return { openid, snapshot }
+  }
+
   app.get('/api/data', async (request) => {
     const snapshot = repository.getSnapshot(request.openid)
     if (!snapshot) {
@@ -277,6 +315,101 @@ export const createServer = ({ config, repository }) => {
     return {
       date: dateKey,
       user: summarizeSnapshot(snapshot, dateKey),
+    }
+  })
+
+  app.get('/api/admin/users/:openid/eink-token', async (request, reply) => {
+    const snapshot = repository.listSnapshots().find((item) => item.openid === request.params.openid)
+    if (!snapshot) {
+      return reply.code(404).send({ error: 'user not found' })
+    }
+
+    return {
+      openid: request.params.openid,
+      userToken: createEinkUserToken({
+        openid: request.params.openid,
+        secret: config.einkUserTokenSecret,
+      }),
+    }
+  })
+
+  app.get('/api/eink/status', async (request, reply) => {
+    const auth = authenticateEinkRequest(request, reply)
+    if (!auth) return reply
+
+    const options = parseEinkOptions(request.query)
+    const dateKey = getDateKey(options.date)
+    return createEinkStatus({
+      snapshot: auth.snapshot,
+      dateKey,
+      options,
+      summarizeSnapshot,
+    })
+  })
+
+  app.get('/api/eink/image.svg', async (request, reply) => {
+    const auth = authenticateEinkRequest(request, reply)
+    if (!auth) return reply
+
+    const options = parseEinkOptions(request.query)
+    const dateKey = getDateKey(options.date)
+    const status = createEinkStatus({
+      snapshot: auth.snapshot,
+      dateKey,
+      options,
+      summarizeSnapshot,
+    })
+
+    return reply
+      .type('image/svg+xml; charset=utf-8')
+      .header('Cache-Control', 'no-store')
+      .send(renderEinkSvg(status))
+  })
+
+  app.get('/api/eink/preview.html', async (request, reply) => {
+    const auth = authenticateEinkRequest(request, reply)
+    if (!auth) return reply
+
+    const options = parseEinkOptions(request.query)
+    const dateKey = getDateKey(options.date)
+    const status = createEinkStatus({
+      snapshot: auth.snapshot,
+      dateKey,
+      options,
+      summarizeSnapshot,
+    })
+
+    return reply
+      .type('text/html; charset=utf-8')
+      .header('Cache-Control', 'no-store')
+      .send(renderEinkHtml(status))
+  })
+
+  app.get('/api/eink/image.png', async (request, reply) => {
+    const auth = authenticateEinkRequest(request, reply)
+    if (!auth) return reply
+
+    const options = parseEinkOptions(request.query)
+    const dateKey = getDateKey(options.date)
+    const status = createEinkStatus({
+      snapshot: auth.snapshot,
+      dateKey,
+      options,
+      summarizeSnapshot,
+    })
+
+    try {
+      const png = await renderEinkPng({
+        status,
+        chromeExecutablePath: config.chromeExecutablePath,
+      })
+      return reply
+        .type('image/png')
+        .header('Cache-Control', 'no-store')
+        .send(png)
+    } catch (error) {
+      request.log.warn({ err: error }, 'eink png render failed')
+      return reply.code(503).send({ error: 'chrome renderer unavailable' })
     }
   })
 

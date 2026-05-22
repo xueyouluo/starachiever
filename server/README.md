@@ -30,6 +30,9 @@ The server process listens on port `3001`; nginx terminates HTTPS and proxies `s
 - `DATABASE_PATH`: SQLite database file path
 - `JWT_SECRET`: long random secret for API tokens
 - `ADMIN_READ_TOKEN`: token for read-only web stats admin endpoints; defaults to `JWT_SECRET` if omitted
+- `EINK_DEVICE_TOKEN`: shared read token for ESP32/e-ink devices
+- `EINK_USER_TOKEN_SECRET`: secret used to derive per-user e-ink read tokens; defaults to `JWT_SECRET`
+- `CHROME_EXECUTABLE_PATH`: Chrome/Chromium executable used for e-ink PNG screenshots
 - `WECHAT_APP_ID`: mini-program AppID
 - `WECHAT_APP_SECRET`: mini-program AppSecret
 - `WECHAT_AUTH_MOCK`: set `true` only for local tests
@@ -42,6 +45,13 @@ The server process listens on port `3001`; nginx terminates HTTPS and proxies `s
 - `PUT /api/data` with `Authorization: Bearer <token>` and `{ "data": { "children": [], "activeChildId": null } }`
 - `GET /api/admin/users?date=YYYY-MM-DD` with `Authorization: Bearer <ADMIN_READ_TOKEN>`
 - `GET /api/admin/users/:openid/stats?date=YYYY-MM-DD` with `Authorization: Bearer <ADMIN_READ_TOKEN>`
+- `GET /api/admin/users/:openid/eink-token` with `Authorization: Bearer <ADMIN_READ_TOKEN>`
+- `GET /api/eink/status?openid=<openid>&width=792&height=272&layout=auto&page=0` with `X-Device-Token` and `X-User-Token`
+- `GET /api/eink/image.png?openid=<openid>&width=792&height=272&layout=auto&page=0` with `X-Device-Token` and `X-User-Token`
+- `GET /api/eink/image.svg?openid=<openid>&width=792&height=272&layout=auto&page=0` with `X-Device-Token` and `X-User-Token`
+- `GET /api/eink/preview.html?openid=<openid>&width=792&height=272&layout=auto&page=0` with `X-Device-Token` and `X-User-Token`
+
+The primary e-ink image endpoint renders HTML through Chrome and returns PNG, so the browser preview and device image share the same layout. It supports custom `width` and `height`; `layout=auto` uses two children side-by-side on larger screens and single-child paging on smaller screens. SVG/HTML endpoints are kept for debugging and fallback.
 
 The mini-program uses local-first sync:
 

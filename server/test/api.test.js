@@ -14,6 +14,7 @@ const createTestApp = () => {
     DATABASE_PATH: path.join(dir, 'test.sqlite'),
     JWT_SECRET: 'test-secret',
     ADMIN_READ_TOKEN: 'admin-secret',
+    EINK_DEVICE_TOKEN: 'device-secret',
     WECHAT_AUTH_MOCK: 'true',
   })
   const db = openDatabase(config.databasePath)
@@ -157,4 +158,103 @@ test('admin stats endpoints require admin token and summarize snapshots', async 
   assert.equal(childStats.completedTasks[0].completedTime, '2026-05-20T02:00:00.000Z')
   assert.equal(childStats.recentDays.length, 7)
   assert.equal(childStats.recentDays.at(-1).completedTasks, 2)
+})
+
+test('eink endpoints require device and user tokens and render svg image', async () => {
+  const app = createTestApp()
+  const auth = await app.inject({
+    method: 'POST',
+    url: '/api/auth/wechat',
+    payload: { code: 'eink-family' },
+  })
+  const token = auth.json().token
+  const openid = auth.json().openid
+
+  await app.inject({
+    method: 'PUT',
+    url: '/api/data',
+    headers: { authorization: `Bearer ${token}` },
+    payload: {
+      clientUpdatedAt: '2026-05-20T00:00:00.000Z',
+      data: {
+        activeChildId: 'child-a',
+        children: [
+          {
+            id: 'child-a',
+            name: '姐姐',
+            avatar: '👧',
+            totalPoints: 66,
+            currentStreak: 4,
+            lastLoginDate: '2026-05-20',
+            tasks: [{ id: 'task-a', title: '阅读', points: 5, completed: true }],
+            history: { '2026-05-20': 1 },
+            dailyHistory: {
+              '2026-05-20': {
+                date: '2026-05-20',
+                totalTasks: 1,
+                totalPoints: 5,
+                tasks: [{ id: 'task-a', title: '阅读', points: 5, completedTime: '2026-05-20T02:00:00.000Z' }],
+              },
+            },
+            redemptions: [],
+            stats: { totalTasksCompleted: 1, totalPointsEarned: 5 },
+            unlockedBadges: [],
+          },
+          {
+            id: 'child-b',
+            name: '弟弟',
+            avatar: '👦',
+            totalPoints: 8,
+            currentStreak: 1,
+            lastLoginDate: '2026-05-20',
+            tasks: [],
+            history: {},
+            dailyHistory: {},
+            redemptions: [],
+            stats: { totalTasksCompleted: 0, totalPointsEarned: 0 },
+            unlockedBadges: [],
+          },
+        ],
+      },
+    },
+  })
+
+  const tokenResponse = await app.inject({
+    method: 'GET',
+    url: `/api/admin/users/${openid}/eink-token`,
+    headers: { authorization: 'Bearer admin-secret' },
+  })
+  assert.equal(tokenResponse.statusCode, 200)
+  assert.equal(tokenResponse.json().openid, openid)
+
+  const unauthorized = await app.inject({
+    method: 'GET',
+    url: `/api/eink/status?openid=${openid}`,
+  })
+  assert.equal(unauthorized.statusCode, 401)
+
+  const statusResponse = await app.inject({
+    method: 'GET',
+    url: `/api/eink/status?openid=${openid}&width=792&height=272&layout=auto&date=2026-05-20`,
+    headers: {
+      'x-device-token': 'device-secret',
+      'x-user-token': tokenResponse.json().userToken,
+    },
+  })
+  assert.equal(statusResponse.statusCode, 200)
+  assert.equal(statusResponse.json().layout, 'split')
+  assert.equal(statusResponse.json().visibleChildren.length, 2)
+  assert.equal(statusResponse.json().visibleChildren[0].totalPoints, 66)
+
+  const imageResponse = await app.inject({
+    method: 'GET',
+    url: `/api/eink/image.svg?openid=${openid}&width=296&height=128&layout=single&page=1&date=2026-05-20`,
+    headers: {
+      'x-device-token': 'device-secret',
+      'x-user-token': tokenResponse.json().userToken,
+    },
+  })
+  assert.equal(imageResponse.statusCode, 200)
+  assert.equal(imageResponse.headers['content-type'], 'image/svg+xml; charset=utf-8')
+  assert.match(imageResponse.body, /弟弟/)
 })
