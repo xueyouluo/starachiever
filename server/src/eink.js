@@ -41,10 +41,10 @@ export const verifyEinkUserToken = ({ openid, token, secret }) => safeEqual(
 )
 
 export const parseEinkOptions = (query = {}) => {
-  const width = clampInt(query.width, 792, 200, 1600)
-  const height = clampInt(query.height, 272, 100, 1200)
+  const width = clampInt(query.width, 400, 200, 1600)
+  const height = clampInt(query.height, 300, 100, 1200)
   const page = clampInt(query.page, 0, 0, 20)
-  const requestedLayout = ['single', 'split', 'auto'].includes(query.layout) ? query.layout : 'auto'
+  const requestedLayout = ['single', 'split', 'auto'].includes(query.layout) ? query.layout : 'split'
   const layout = requestedLayout === 'auto'
     ? (width >= 640 && height >= 240 ? 'split' : 'single')
     : requestedLayout

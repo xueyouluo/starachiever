@@ -46,11 +46,11 @@ The server process listens on port `3001`; nginx terminates HTTPS and proxies `s
 - `GET /api/admin/users?date=YYYY-MM-DD` with `Authorization: Bearer <ADMIN_READ_TOKEN>`
 - `GET /api/admin/users/:openid/stats?date=YYYY-MM-DD` with `Authorization: Bearer <ADMIN_READ_TOKEN>`
 - `GET /api/admin/users/:openid/eink-token` with `Authorization: Bearer <ADMIN_READ_TOKEN>`
-- `GET /api/eink/status?openid=<openid>&width=792&height=272&layout=auto&page=0` with `X-Device-Token` and `X-User-Token`
-- `GET /api/eink/image.png?openid=<openid>&width=792&height=272&layout=auto&page=0` with `X-Device-Token` and `X-User-Token`
-- `GET /api/eink/preview.html?openid=<openid>&width=792&height=272&layout=auto&page=0` with `X-Device-Token` and `X-User-Token`
+- `GET /api/eink/status?openid=<openid>&width=400&height=300&layout=split&page=0` with `X-Device-Token` and `X-User-Token`
+- `GET /api/eink/image.png?openid=<openid>&width=400&height=300&layout=split&page=0` with `X-Device-Token` and `X-User-Token`
+- `GET /api/eink/preview.html?openid=<openid>&width=400&height=300&layout=split&page=0` with `X-Device-Token` and `X-User-Token`
 
-The e-ink image endpoint renders HTML through Chrome and returns PNG, so the browser preview and device image share the same layout. It supports custom `width` and `height`; `layout=auto` uses two children side-by-side on larger screens and single-child paging on smaller screens.
+The e-ink image endpoint renders HTML through Chrome and returns PNG, so the browser preview and device image share the same layout. It defaults to `400x300` and `layout=split`, and supports custom `width` and `height`; `layout=auto` uses two children side-by-side on larger screens and single-child paging on smaller screens.
 
 The mini-program uses local-first sync:
 
