@@ -245,6 +245,8 @@ test('eink endpoints require device and user tokens and render svg image', async
   assert.equal(statusResponse.json().layout, 'split')
   assert.equal(statusResponse.json().visibleChildren.length, 2)
   assert.equal(statusResponse.json().visibleChildren[0].totalPoints, 66)
+  assert.equal(statusResponse.json().visibleChildren[0].recentDays.length, 7)
+  assert.equal(statusResponse.json().visibleChildren[0].recentDays.at(-1).completedTasks, 1)
 
   const imageResponse = await app.inject({
     method: 'GET',
@@ -257,4 +259,5 @@ test('eink endpoints require device and user tokens and render svg image', async
   assert.equal(imageResponse.statusCode, 200)
   assert.equal(imageResponse.headers['content-type'], 'image/svg+xml; charset=utf-8')
   assert.match(imageResponse.body, /弟弟/)
+  assert.match(imageResponse.body, /近7天完成数/)
 })

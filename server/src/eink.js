@@ -69,6 +69,10 @@ export const createEinkStatus = ({ snapshot, dateKey, options, summarizeSnapshot
     totalTasks: child.totalTasks,
     todayPoints: child.todayPoints,
     currentStreak: child.currentStreak,
+    recentDays: child.recentDays.map((day) => ({
+      date: day.date,
+      completedTasks: day.completedTasks,
+    })),
     recentTasks: child.completedTasks.slice(0, 4).map((task) => ({
       title: task.title,
       points: task.points,
@@ -106,8 +110,25 @@ const drawChildPanel = ({ child, x, y, width, height }) => {
   const pointsSize = Math.max(38, Math.min(82, Math.floor(width * 0.16)))
   const statSize = Math.max(14, Math.min(28, Math.floor(width * 0.044)))
   const taskSize = Math.max(12, Math.min(22, Math.floor(width * 0.037)))
-  const taskStartY = y + padding + titleSize + pointsSize + statSize + 18
+  const chartHeight = Math.max(34, Math.min(54, Math.floor(height * 0.22)))
+  const taskStartY = y + padding + titleSize + pointsSize + statSize + chartHeight + 26
   const maxTasks = Math.max(0, Math.min(4, Math.floor((y + height - taskStartY - padding) / (taskSize + 8))))
+  const maxChartValue = Math.max(1, ...child.recentDays.map((day) => day.completedTasks))
+  const chartX = x + padding
+  const chartY = y + padding + titleSize + pointsSize + statSize + 12
+  const chartWidth = width - padding * 2
+  const barGap = Math.max(3, Math.floor(chartWidth * 0.012))
+  const barWidth = Math.max(6, Math.floor((chartWidth - barGap * 6) / 7))
+  const chartBars = child.recentDays.map((day, index) => {
+    const barHeight = Math.max(day.completedTasks > 0 ? 3 : 0, Math.floor((day.completedTasks / maxChartValue) * (chartHeight - 18)))
+    const barX = chartX + index * (barWidth + barGap)
+    const barY = chartY + chartHeight - 8 - barHeight
+    const color = index === child.recentDays.length - 1 ? 'red' : 'black'
+    return `
+      <rect x="${barX}" y="${barY}" width="${barWidth}" height="${barHeight}" fill="${color}"/>
+      ${drawText({ x: barX + barWidth / 2, y: chartY + chartHeight - 10 - barHeight, size: 10, weight: 800, color, text: day.completedTasks, anchor: 'middle' })}
+    `
+  }).join('')
 
   const tasks = child.recentTasks.slice(0, maxTasks)
   const taskLines = tasks.map((task, index) => {
@@ -126,6 +147,9 @@ const drawChildPanel = ({ child, x, y, width, height }) => {
     ${drawText({ x: x + width - padding, y: y + padding + titleSize + Math.floor(pointsSize * 0.65), size: statSize, anchor: 'end', text: `今日 ${child.todayCompletedTasks}/${child.totalTasks}` })}
     ${drawText({ x: x + width - padding, y: y + padding + titleSize + pointsSize, size: statSize, color: child.todayPoints < 0 ? 'red' : 'black', anchor: 'end', text: `积分 ${formatPoints(child.todayPoints)}` })}
     ${drawText({ x: x + padding, y: y + padding + titleSize + pointsSize + statSize, size: statSize, text: `连续 ${child.currentStreak} 天` })}
+    ${drawText({ x: chartX, y: chartY + 10, size: 10, weight: 800, text: '近7天完成数' })}
+    <line x1="${chartX}" y1="${chartY + chartHeight - 8}" x2="${chartX + chartWidth}" y2="${chartY + chartHeight - 8}" stroke="black" stroke-width="1"/>
+    ${chartBars}
     ${tasks.length > 0 ? taskLines : drawText({ x: x + padding, y: taskStartY, size: taskSize, weight: 600, color: 'black', text: '今天还没有任务明细' })}
   `
 }
@@ -162,6 +186,17 @@ export const renderEinkHtml = (status) => {
   const split = status.layout === 'split' && visibleChildren.length > 1
 
   const childCards = visibleChildren.map((child) => {
+    const maxChartValue = Math.max(1, ...child.recentDays.map((day) => day.completedTasks))
+    const chartBars = child.recentDays.map((day, index) => {
+      const heightPercent = Math.max(day.completedTasks > 0 ? 8 : 0, Math.round((day.completedTasks / maxChartValue) * 100))
+      const isToday = index === child.recentDays.length - 1
+      return `
+        <div class="chart-day">
+          <span class="${isToday ? 'red' : ''}">${escapeXml(day.completedTasks)}</span>
+          <div class="bar ${isToday ? 'today-bar' : ''}" style="height:${heightPercent}%"></div>
+        </div>
+      `
+    }).join('')
     const taskRows = child.recentTasks.slice(0, 4).map((task) => `
       <div class="task-row">
         <span>${escapeXml(`${task.timeText} ${task.title}`)}</span>
@@ -181,6 +216,10 @@ export const renderEinkHtml = (status) => {
             <div class="${child.todayPoints < 0 ? 'red' : ''}">积分 ${escapeXml(formatPoints(child.todayPoints))}</div>
             <div>连续 ${escapeXml(child.currentStreak)} 天</div>
           </div>
+        </div>
+        <div class="chart-block">
+          <div class="chart-title">近7天任务完成数量</div>
+          <div class="chart-bars">${chartBars}</div>
         </div>
         <div class="tasks">${taskRows || '<div class="empty">今天还没有任务明细</div>'}</div>
       </section>
@@ -285,9 +324,50 @@ export const renderEinkHtml = (status) => {
       white-space: nowrap;
     }
     .red { color: #f00; }
+    .chart-block {
+      margin-top: ${Math.max(5, Math.floor(height * 0.016))}px;
+      padding-bottom: ${Math.max(4, Math.floor(height * 0.012))}px;
+      border-bottom: 3px solid #000;
+    }
+    .chart-title {
+      font-size: ${Math.max(11, Math.min(18, Math.floor((split ? width / 2 : width) * 0.028)))}px;
+      line-height: 1;
+      font-weight: 900;
+      margin-bottom: 3px;
+    }
+    .chart-bars {
+      height: ${Math.max(30, Math.min(54, Math.floor(height * 0.17)))}px;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      align-items: end;
+      gap: ${Math.max(3, Math.floor((split ? width / 2 : width) * 0.012))}px;
+      border-bottom: 2px solid #000;
+    }
+    .chart-day {
+      height: 100%;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 1px;
+    }
+    .chart-day span {
+      font-size: ${Math.max(9, Math.min(15, Math.floor((split ? width / 2 : width) * 0.024)))}px;
+      line-height: 1;
+      font-weight: 900;
+    }
+    .bar {
+      width: 100%;
+      min-height: 0;
+      background: #000;
+    }
+    .today-bar {
+      background: #f00;
+    }
     .tasks {
       min-height: 0;
-      padding-top: ${Math.max(5, Math.floor(height * 0.018))}px;
+      padding-top: ${Math.max(4, Math.floor(height * 0.012))}px;
       overflow: hidden;
     }
     .task-row {
