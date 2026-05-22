@@ -160,7 +160,7 @@ test('admin stats endpoints require admin token and summarize snapshots', async 
   assert.equal(childStats.recentDays.at(-1).completedTasks, 2)
 })
 
-test('eink endpoints require device and user tokens and render svg image', async () => {
+test('eink endpoints require device and user tokens and expose preview html', async () => {
   const app = createTestApp()
   const auth = await app.inject({
     method: 'POST',
@@ -248,16 +248,16 @@ test('eink endpoints require device and user tokens and render svg image', async
   assert.equal(statusResponse.json().visibleChildren[0].recentDays.length, 7)
   assert.equal(statusResponse.json().visibleChildren[0].recentDays.at(-1).completedTasks, 1)
 
-  const imageResponse = await app.inject({
+  const previewResponse = await app.inject({
     method: 'GET',
-    url: `/api/eink/image.svg?openid=${openid}&width=296&height=128&layout=single&page=1&date=2026-05-20`,
+    url: `/api/eink/preview.html?openid=${openid}&width=296&height=128&layout=single&page=1&date=2026-05-20`,
     headers: {
       'x-device-token': 'device-secret',
       'x-user-token': tokenResponse.json().userToken,
     },
   })
-  assert.equal(imageResponse.statusCode, 200)
-  assert.equal(imageResponse.headers['content-type'], 'image/svg+xml; charset=utf-8')
-  assert.match(imageResponse.body, /弟弟/)
-  assert.match(imageResponse.body, /近7天完成数/)
+  assert.equal(previewResponse.statusCode, 200)
+  assert.equal(previewResponse.headers['content-type'], 'text/html; charset=utf-8')
+  assert.match(previewResponse.body, /弟弟/)
+  assert.match(previewResponse.body, /近7天任务完成数量/)
 })

@@ -8,7 +8,6 @@ import {
   parseEinkOptions,
   renderEinkHtml,
   renderEinkPng,
-  renderEinkSvg,
   verifyEinkUserToken,
 } from './eink.js'
 
@@ -345,25 +344,6 @@ export const createServer = ({ config, repository }) => {
       options,
       summarizeSnapshot,
     })
-  })
-
-  app.get('/api/eink/image.svg', async (request, reply) => {
-    const auth = authenticateEinkRequest(request, reply)
-    if (!auth) return reply
-
-    const options = parseEinkOptions(request.query)
-    const dateKey = getDateKey(options.date)
-    const status = createEinkStatus({
-      snapshot: auth.snapshot,
-      dateKey,
-      options,
-      summarizeSnapshot,
-    })
-
-    return reply
-      .type('image/svg+xml; charset=utf-8')
-      .header('Cache-Control', 'no-store')
-      .send(renderEinkSvg(status))
   })
 
   app.get('/api/eink/preview.html', async (request, reply) => {

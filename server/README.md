@@ -48,10 +48,9 @@ The server process listens on port `3001`; nginx terminates HTTPS and proxies `s
 - `GET /api/admin/users/:openid/eink-token` with `Authorization: Bearer <ADMIN_READ_TOKEN>`
 - `GET /api/eink/status?openid=<openid>&width=792&height=272&layout=auto&page=0` with `X-Device-Token` and `X-User-Token`
 - `GET /api/eink/image.png?openid=<openid>&width=792&height=272&layout=auto&page=0` with `X-Device-Token` and `X-User-Token`
-- `GET /api/eink/image.svg?openid=<openid>&width=792&height=272&layout=auto&page=0` with `X-Device-Token` and `X-User-Token`
 - `GET /api/eink/preview.html?openid=<openid>&width=792&height=272&layout=auto&page=0` with `X-Device-Token` and `X-User-Token`
 
-The primary e-ink image endpoint renders HTML through Chrome and returns PNG, so the browser preview and device image share the same layout. It supports custom `width` and `height`; `layout=auto` uses two children side-by-side on larger screens and single-child paging on smaller screens. SVG/HTML endpoints are kept for debugging and fallback.
+The e-ink image endpoint renders HTML through Chrome and returns PNG, so the browser preview and device image share the same layout. It supports custom `width` and `height`; `layout=auto` uses two children side-by-side on larger screens and single-child paging on smaller screens.
 
 The mini-program uses local-first sync:
 
