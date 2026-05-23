@@ -196,9 +196,9 @@ const StatsDashboard: React.FC = () => {
   const [apiBaseUrl, setApiBaseUrl] = useState(() => localStorage.getItem(API_STORAGE_KEY) || DEFAULT_API_BASE_URL);
   const [adminToken, setAdminToken] = useState(() => localStorage.getItem(TOKEN_STORAGE_KEY) || '');
   const [einkDeviceToken, setEinkDeviceToken] = useState(() => localStorage.getItem(EINK_DEVICE_TOKEN_STORAGE_KEY) || '');
-  const [einkWidth, setEinkWidth] = useState(792);
-  const [einkHeight, setEinkHeight] = useState(272);
-  const [einkLayout, setEinkLayout] = useState<'auto' | 'single' | 'split'>('auto');
+  const [einkWidth, setEinkWidth] = useState(400);
+  const [einkHeight, setEinkHeight] = useState(300);
+  const [einkLayout, setEinkLayout] = useState<'auto' | 'single' | 'split'>('split');
   const [einkPage, setEinkPage] = useState(0);
   const [einkUserToken, setEinkUserToken] = useState('');
   const [einkImageUrl, setEinkImageUrl] = useState('');

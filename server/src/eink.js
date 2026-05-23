@@ -1,7 +1,12 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import fs from 'node:fs'
+import { PNG } from 'pngjs'
 
 let browserPromise = null
+
+const EINK_BLACK = [0, 0, 0, 255]
+const EINK_WHITE = [255, 255, 255, 255]
+const EINK_RED = [255, 0, 0, 255]
 
 const clampInt = (value, fallback, min, max) => {
   const number = Number.parseInt(value, 10)
@@ -29,6 +34,28 @@ const safeEqual = (left, right) => {
   const a = Buffer.from(String(left || ''))
   const b = Buffer.from(String(right || ''))
   return a.length === b.length && timingSafeEqual(a, b)
+}
+
+export const quantizeEinkPng = (source) => {
+  const image = PNG.sync.read(source)
+  const { data } = image
+
+  for (let offset = 0; offset < data.length; offset += 4) {
+    const alpha = data[offset + 3] / 255
+    const red = Math.round(data[offset] * alpha + 255 * (1 - alpha))
+    const green = Math.round(data[offset + 1] * alpha + 255 * (1 - alpha))
+    const blue = Math.round(data[offset + 2] * alpha + 255 * (1 - alpha))
+    const luminance = (red * 299 + green * 587 + blue * 114) / 1000
+    const isRed = red >= 128 && red - green >= 48 && red - blue >= 48
+    const ink = isRed ? EINK_RED : luminance < 132 ? EINK_BLACK : EINK_WHITE
+
+    data[offset] = ink[0]
+    data[offset + 1] = ink[1]
+    data[offset + 2] = ink[2]
+    data[offset + 3] = ink[3]
+  }
+
+  return PNG.sync.write(image)
 }
 
 export const createEinkUserToken = ({ openid, secret }) => createHmac('sha256', secret)
@@ -129,7 +156,7 @@ export const renderEinkHtml = (status) => {
     return `
       <section class="child-card">
         <div class="child-head">
-          <h2>${escapeXml(`${child.avatar || ''} ${child.name}`)}</h2>
+          <h2>${escapeXml(child.name)}</h2>
           <div class="today">今日 ${child.todayCompletedTasks}/${child.totalTasks}</div>
         </div>
         <div class="score-row">
@@ -175,7 +202,7 @@ export const renderEinkHtml = (status) => {
       justify-content: space-between;
       height: ${headerHeight}px;
       border-bottom: 2px solid #000;
-      font-weight: 900;
+      font-weight: 800;
     }
     .brand {
       font-size: ${Math.max(15, Math.floor(height * 0.055))}px;
@@ -211,15 +238,15 @@ export const renderEinkHtml = (status) => {
       min-width: 0;
       font-size: ${Math.max(20, Math.min(44, Math.floor((split ? width / 2 : width) * 0.072)))}px;
       line-height: 1.05;
-      font-weight: 900;
+      font-weight: 800;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .today {
       flex: 0 0 auto;
-      font-size: ${Math.max(13, Math.min(26, Math.floor((split ? width / 2 : width) * 0.038)))}px;
-      font-weight: 900;
+      font-size: ${Math.max(14, Math.min(26, Math.floor((split ? width / 2 : width) * 0.038)))}px;
+      font-weight: 700;
       line-height: 1.15;
       padding-top: 4px;
     }
@@ -236,13 +263,13 @@ export const renderEinkHtml = (status) => {
       color: #f00;
       font-size: ${Math.max(40, Math.min(88, Math.floor((split ? width / 2 : width) * 0.16)))}px;
       line-height: 0.88;
-      font-weight: 1000;
+      font-weight: 800;
     }
     .score-meta {
       text-align: right;
-      font-size: ${Math.max(13, Math.min(26, Math.floor((split ? width / 2 : width) * 0.038)))}px;
+      font-size: ${Math.max(14, Math.min(26, Math.floor((split ? width / 2 : width) * 0.038)))}px;
       line-height: 1.25;
-      font-weight: 900;
+      font-weight: 700;
       white-space: nowrap;
     }
     .red { color: #f00; }
@@ -252,9 +279,9 @@ export const renderEinkHtml = (status) => {
       border-bottom: 3px solid #000;
     }
     .chart-title {
-      font-size: ${Math.max(11, Math.min(18, Math.floor((split ? width / 2 : width) * 0.028)))}px;
+      font-size: ${Math.max(12, Math.min(18, Math.floor((split ? width / 2 : width) * 0.028)))}px;
       line-height: 1;
-      font-weight: 900;
+      font-weight: 700;
       margin-bottom: 3px;
     }
     .chart-bars {
@@ -275,9 +302,9 @@ export const renderEinkHtml = (status) => {
       gap: 1px;
     }
     .chart-day span {
-      font-size: ${Math.max(9, Math.min(15, Math.floor((split ? width / 2 : width) * 0.024)))}px;
+      font-size: ${Math.max(10, Math.min(15, Math.floor((split ? width / 2 : width) * 0.024)))}px;
       line-height: 1;
-      font-weight: 900;
+      font-weight: 700;
     }
     .bar {
       width: 100%;
@@ -298,9 +325,9 @@ export const renderEinkHtml = (status) => {
       justify-content: space-between;
       gap: 8px;
       min-width: 0;
-      font-size: ${Math.max(12, Math.min(22, Math.floor((split ? width / 2 : width) * 0.033)))}px;
+      font-size: ${Math.max(13, Math.min(22, Math.floor((split ? width / 2 : width) * 0.033)))}px;
       line-height: 1.32;
-      font-weight: 800;
+      font-weight: 700;
       border-bottom: 2px solid #000;
       padding: 2px 0;
     }
@@ -311,8 +338,8 @@ export const renderEinkHtml = (status) => {
       text-overflow: ellipsis;
     }
     .empty {
-      font-size: ${Math.max(13, Math.min(22, Math.floor((split ? width / 2 : width) * 0.034)))}px;
-      font-weight: 800;
+      font-size: ${Math.max(14, Math.min(22, Math.floor((split ? width / 2 : width) * 0.034)))}px;
+      font-weight: 700;
       padding-top: 6px;
     }
   </style>
@@ -370,10 +397,11 @@ export const renderEinkPng = async ({ status, chromeExecutablePath }) => {
       deviceScaleFactor: 1,
     })
     await page.setContent(renderEinkHtml(status), { waitUntil: 'networkidle0' })
-    return await page.screenshot({
+    const screenshot = await page.screenshot({
       type: 'png',
       clip: { x: 0, y: 0, width: status.width, height: status.height },
     })
+    return quantizeEinkPng(screenshot)
   } finally {
     await page.close()
   }

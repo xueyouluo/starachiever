@@ -15,6 +15,7 @@
   "dependencies": {
     "@fastify/cors": "^10.0.2",
     "fastify": "^5.2.1",
+    "pngjs": "^7.0.0",
     "puppeteer-core": "^25.0.4"
   }
 }
