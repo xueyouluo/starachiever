@@ -262,6 +262,9 @@ test('eink endpoints require device and user tokens and expose preview html', as
   assert.equal(fourColorStatusResponse.json().height, 480)
   assert.equal(fourColorStatusResponse.json().palette, 'black-white-yellow-red')
   assert.equal(fourColorStatusResponse.json().nativeFormat, 'acep-2bpp')
+  assert.equal(fourColorStatusResponse.json().visibleChildren[0].todayEarned, 5)
+  assert.equal(fourColorStatusResponse.json().visibleChildren[0].todayDeducted, 0)
+  assert.equal(fourColorStatusResponse.json().visibleChildren[0].weekCompleted, 1)
 
   const invalidFrameResponse = await app.inject({
     method: 'GET',

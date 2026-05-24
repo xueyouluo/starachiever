@@ -163,26 +163,36 @@ export const parseEinkOptions = (query = {}) => {
 
 export const createEinkStatus = ({ snapshot, dateKey, options, summarizeSnapshot }) => {
   const summary = summarizeSnapshot(snapshot, dateKey)
-  const children = summary.children.map((child) => ({
-    id: child.id,
-    name: child.name,
-    avatar: child.avatar,
-    totalPoints: child.totalPoints,
-    todayCompletedTasks: child.todayCompletedTasks,
-    totalTasks: child.totalTasks,
-    todayPoints: child.todayPoints,
-    currentStreak: child.currentStreak,
-    recentDays: child.recentDays.map((day) => ({
+  const children = summary.children.map((child) => {
+    const recentDays = child.recentDays.map((day) => ({
       date: day.date,
       completedTasks: day.completedTasks,
-    })),
-    recentTasks: child.completedTasks.slice(0, 4).map((task) => ({
-      title: task.title,
-      points: task.points,
-      completedTime: task.completedTime,
-      timeText: formatTime(task.completedTime),
-    })),
-  }))
+    }))
+    const completedTasks = child.completedTasks || []
+
+    return {
+      id: child.id,
+      name: child.name,
+      avatar: child.avatar,
+      totalPoints: child.totalPoints,
+      todayCompletedTasks: child.todayCompletedTasks,
+      totalTasks: child.totalTasks,
+      todayPoints: child.todayPoints,
+      todayEarned: completedTasks.reduce((sum, task) => sum + Math.max(0, task.points), 0),
+      todayDeducted: completedTasks.reduce((sum, task) => sum + Math.abs(Math.min(0, task.points)), 0),
+      hasTodayTaskDetails: completedTasks.length > 0,
+      currentStreak: child.currentStreak,
+      todayRedemptions: child.todayRedemptions,
+      weekCompleted: recentDays.reduce((sum, day) => sum + day.completedTasks, 0),
+      recentDays,
+      recentTasks: completedTasks.slice(0, 4).map((task) => ({
+        title: task.title,
+        points: task.points,
+        completedTime: task.completedTime,
+        timeText: formatTime(task.completedTime),
+      })),
+    }
+  })
 
   const visibleChildren = options.layout === 'split'
     ? children.slice(0, 2)
@@ -205,7 +215,234 @@ export const createEinkStatus = ({ snapshot, dateKey, options, summarizeSnapshot
   }
 }
 
+const renderLargeEinkHtml = (status) => {
+  const visibleChildren = status.visibleChildren
+  const familyCompleted = status.children.reduce((sum, child) => sum + child.todayCompletedTasks, 0)
+  const familyPoints = status.children.reduce((sum, child) => sum + child.totalPoints, 0)
+  const familyTodayPoints = status.children.reduce((sum, child) => sum + child.todayPoints, 0)
+  const children = visibleChildren.map((child) => {
+    const maxChartValue = Math.max(1, ...child.recentDays.map((day) => day.completedTasks))
+    const chartBars = child.recentDays.map((day, index) => {
+      const percent = Math.max(day.completedTasks > 0 ? 10 : 0, Math.round(day.completedTasks / maxChartValue * 100))
+      const isToday = index === child.recentDays.length - 1
+      return `
+        <div class="wide-day">
+          <b class="${isToday ? 'red' : ''}">${escapeXml(day.completedTasks)}</b>
+          <span class="wide-bar ${isToday ? 'red-bg' : ''}" style="height:${percent}%"></span>
+          <small>${escapeXml(day.date.slice(5))}</small>
+        </div>
+      `
+    }).join('')
+    const detailScore = child.hasTodayTaskDetails || child.todayCompletedTasks === 0
+      ? `
+          <div class="metric"><label>今日得分</label><strong>+${escapeXml(child.todayEarned)}</strong></div>
+          <div class="metric deduction"><label>今日扣分</label><strong>-${escapeXml(child.todayDeducted)}</strong></div>
+        `
+      : `
+          <div class="metric"><label>任务净分</label><strong class="${child.todayPoints < 0 ? 'red' : ''}">${escapeXml(formatPoints(child.todayPoints))}</strong></div>
+          <div class="metric"><label>明细</label><strong>待同步</strong></div>
+        `
+    const tasks = child.recentTasks.slice(0, 3).map((task) => `
+      <div class="wide-task">
+        <span>${escapeXml(`${task.timeText}  ${task.title}`)}</span>
+        <strong class="${task.points < 0 ? 'red' : ''}">${escapeXml(formatPoints(task.points))}</strong>
+      </div>
+    `).join('')
+
+    return `
+      <section class="wide-child">
+        <div class="wide-name">
+          <h2>${escapeXml(child.name)}</h2>
+          <div class="wide-total"><span>当前积分</span><b>${escapeXml(child.totalPoints)}</b></div>
+        </div>
+        <div class="metrics">
+          <div class="metric highlight"><label>今日完成</label><strong>${escapeXml(child.todayCompletedTasks)}/${escapeXml(child.totalTasks)}</strong></div>
+          ${detailScore}
+          <div class="metric"><label>连续打卡</label><strong>${escapeXml(child.currentStreak)}天</strong></div>
+        </div>
+        <div class="wide-chart">
+          <div class="section-head"><span>近 7 天完成趋势</span><b>本周 ${escapeXml(child.weekCompleted)} 次</b></div>
+          <div class="wide-bars">${chartBars}</div>
+        </div>
+        <div class="wide-tasks">
+          <div class="section-head">
+            <span>今日最近完成</span>
+            <b>${escapeXml(child.todayCompletedTasks)} 项${child.todayRedemptions > 0 ? ` · 兑换 ${escapeXml(child.todayRedemptions)} 次` : ''}</b>
+          </div>
+          ${tasks || '<div class="wide-empty">今天暂无任务明细</div>'}
+        </div>
+      </section>
+    `
+  }).join('')
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: ${status.width}px;
+      height: ${status.height}px;
+      overflow: hidden;
+      background: #fff;
+      color: #000;
+      font-family: "Noto Sans SC", "Microsoft YaHei", Arial, sans-serif;
+    }
+    .wide-screen {
+      width: ${status.width}px;
+      height: ${status.height}px;
+      padding: 14px 18px;
+      background: #fff;
+    }
+    .wide-header {
+      height: 54px;
+      display: flex;
+      justify-content: space-between;
+      align-items: stretch;
+      border-bottom: 3px solid #000;
+    }
+    .wide-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 17px 0 13px;
+      background: #ff0;
+      font-weight: 800;
+    }
+    .wide-brand h1 { margin: 0; font-size: 26px; line-height: 1; }
+    .wide-brand span { font-size: 16px; font-weight: 700; }
+    .family-summary {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .family-summary strong { font-size: 21px; margin-left: 5px; }
+    .family-summary .red { color: #f00; }
+    .family-summary small { font-size: 12px; font-weight: 700; }
+    .wide-grid {
+      display: grid;
+      grid-template-columns: ${visibleChildren.length > 1 ? '1fr 1fr' : '1fr'};
+      gap: 18px;
+      height: calc(100% - 54px);
+      padding-top: 12px;
+    }
+    .wide-child {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      border: 2px solid #000;
+      padding: 10px 12px;
+    }
+    .wide-name {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 50px;
+      border-bottom: 2px solid #000;
+    }
+    .wide-name h2 { margin: 0; font-size: 26px; font-weight: 800; line-height: 1; }
+    .wide-total { display: flex; align-items: baseline; gap: 7px; font-weight: 700; }
+    .wide-total span { font-size: 12px; }
+    .wide-total b { color: #f00; font-size: 42px; line-height: 1; font-weight: 800; }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      margin-top: 8px;
+    }
+    .metric {
+      min-width: 0;
+      height: 47px;
+      padding: 5px 4px;
+      border: 1px solid #000;
+      text-align: center;
+      font-weight: 700;
+    }
+    .metric label { display: block; font-size: 10px; line-height: 1; }
+    .metric strong { display: block; margin-top: 5px; font-size: 18px; line-height: 1; }
+    .metric.highlight { background: #ff0; }
+    .metric.deduction strong, .red { color: #f00; }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 5px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .section-head b { font-size: 12px; }
+    .wide-chart { margin-top: 9px; }
+    .wide-bars {
+      height: 84px;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      border-bottom: 2px solid #000;
+    }
+    .wide-day {
+      height: 100%;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+    }
+    .wide-day b { font-size: 11px; line-height: 1; margin-bottom: 2px; }
+    .wide-day small { height: 13px; margin-top: 3px; font-size: 9px; font-weight: 700; line-height: 1; }
+    .wide-bar { display: block; width: 100%; min-height: 0; background: #000; }
+    .red-bg { background: #f00; }
+    .wide-tasks {
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 2px solid #000;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .wide-task {
+      height: 24px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      border-bottom: 1px solid #000;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 23px;
+    }
+    .wide-task span {
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .wide-empty { font-size: 13px; font-weight: 700; padding-top: 12px; }
+  </style>
+</head>
+<body>
+  <main class="wide-screen">
+    <header class="wide-header">
+      <div class="wide-brand"><h1>打卡之星</h1><span>${escapeXml(status.date)}</span></div>
+      <div class="family-summary">
+        <span>家庭积分 <strong class="red">${escapeXml(familyPoints)}</strong></span>
+        <span>今日完成 <strong>${escapeXml(familyCompleted)}</strong></span>
+        <span>任务净分 <strong class="${familyTodayPoints < 0 ? 'red' : ''}">${escapeXml(formatPoints(familyTodayPoints))}</strong></span>
+        <small>同步 ${escapeXml(formatTime(status.serverUpdatedAt))}</small>
+      </div>
+    </header>
+    <div class="wide-grid">${children || '<div class="wide-empty">暂无儿童数据</div>'}</div>
+  </main>
+</body>
+</html>`
+}
+
 export const renderEinkHtml = (status) => {
+  if (status.panel === 'gdem075f52' && status.width >= 760 && status.height >= 450) {
+    return renderLargeEinkHtml(status)
+  }
+
   const { width, height, visibleChildren } = status
   const headerBackground = status.palette.includes('yellow') ? '#ff0' : '#fff'
   const split = status.layout === 'split' && visibleChildren.length > 1

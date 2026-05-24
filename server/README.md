@@ -60,6 +60,8 @@ The e-ink renderer uses the selected panel palette for both preview PNGs and com
 
 Custom `width` and `height` still override dimensions for PNG and HTML previews. `frame.bin` requires the panel native size and returns `400` for another size. `layout=auto` uses two children side-by-side on larger screens and single-child paging on smaller screens.
 
+The native `gdem075f52` rendering uses an expanded dashboard layout with family totals, task-only net points, per-child earned/deducted points, today's redemption count, seven-day completed-task totals and recent completed tasks. Redemption costs are reported separately from task net points. The compact `epd-4in2-bwr` layout remains unchanged.
+
 The mini-program uses local-first sync:
 
 - If local data exists, it is shown immediately and uploaded in the background.

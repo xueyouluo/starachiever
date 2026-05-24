@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { PNG } from 'pngjs'
-import { packEinkFrame, parseEinkOptions, quantizeEinkPng, usesNativeEinkSize } from '../src/eink.js'
+import { packEinkFrame, parseEinkOptions, quantizeEinkPng, renderEinkHtml, usesNativeEinkSize } from '../src/eink.js'
 
 test('eink options default to the physical panel configuration', () => {
   const options = parseEinkOptions()
@@ -117,4 +117,84 @@ test('native panel frame payload sizes match the firmware contract', () => {
 
   assert.equal(packEinkFrame({ source: PNG.sync.write(threeColor), panel: 'epd-4in2-bwr' }).length, 30000)
   assert.equal(packEinkFrame({ source: PNG.sync.write(fourColor), panel: 'gdem075f52' }).length, 96000)
+})
+
+test('large four-color panel uses the dashboard layout and richer summaries', () => {
+  const html = renderEinkHtml({
+    panel: 'gdem075f52',
+    palette: 'black-white-yellow-red',
+    width: 800,
+    height: 480,
+    date: '2026-05-24',
+    serverUpdatedAt: '2026-05-24T10:00:00.000Z',
+    layout: 'split',
+    children: [{
+      totalPoints: 18,
+      todayCompletedTasks: 2,
+      todayPoints: 3,
+    }],
+    visibleChildren: [{
+      name: '姐姐',
+      totalPoints: 18,
+      todayCompletedTasks: 2,
+      totalTasks: 4,
+      todayPoints: 3,
+      todayEarned: 5,
+      todayDeducted: 2,
+      hasTodayTaskDetails: true,
+      currentStreak: 6,
+      todayRedemptions: 1,
+      weekCompleted: 8,
+      recentDays: [
+        { date: '2026-05-18', completedTasks: 1 },
+        { date: '2026-05-19', completedTasks: 0 },
+        { date: '2026-05-20', completedTasks: 1 },
+        { date: '2026-05-21', completedTasks: 1 },
+        { date: '2026-05-22', completedTasks: 1 },
+        { date: '2026-05-23', completedTasks: 2 },
+        { date: '2026-05-24', completedTasks: 2 },
+      ],
+      recentTasks: [{ timeText: '18:12', title: '阅读', points: 5 }],
+    }],
+  })
+
+  assert.match(html, /家庭积分/)
+  assert.match(html, /今日得分/)
+  assert.match(html, /今日扣分/)
+  assert.match(html, /本周 8 次/)
+  assert.match(html, /兑换 1 次/)
+  assert.match(html, /任务净分/)
+  assert.match(html, /18:12  阅读/)
+})
+
+test('large dashboard treats an inactive day as zero scores instead of unsynced details', () => {
+  const html = renderEinkHtml({
+    panel: 'gdem075f52',
+    palette: 'black-white-yellow-red',
+    width: 800,
+    height: 480,
+    date: '2026-05-24',
+    serverUpdatedAt: '2026-05-24T10:00:00.000Z',
+    layout: 'single',
+    children: [{ totalPoints: 0, todayCompletedTasks: 0, todayPoints: 0 }],
+    visibleChildren: [{
+      name: '弟弟',
+      totalPoints: 0,
+      todayCompletedTasks: 0,
+      totalTasks: 4,
+      todayPoints: 0,
+      todayEarned: 0,
+      todayDeducted: 0,
+      hasTodayTaskDetails: false,
+      currentStreak: 0,
+      todayRedemptions: 0,
+      weekCompleted: 0,
+      recentDays: [],
+      recentTasks: [],
+    }],
+  })
+
+  assert.match(html, /今日得分/)
+  assert.match(html, /今日扣分/)
+  assert.doesNotMatch(html, /待同步/)
 })
