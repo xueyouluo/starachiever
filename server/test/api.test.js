@@ -248,6 +248,20 @@ test('eink endpoints require device and user tokens and expose preview html', as
   assert.equal(statusResponse.json().visibleChildren[0].recentDays.length, 7)
   assert.equal(statusResponse.json().visibleChildren[0].recentDays.at(-1).completedTasks, 1)
 
+  const fourColorStatusResponse = await app.inject({
+    method: 'GET',
+    url: `/api/eink/status?openid=${openid}&panel=gdem075f52&date=2026-05-20`,
+    headers: {
+      'x-device-token': 'device-secret',
+      'x-user-token': tokenResponse.json().userToken,
+    },
+  })
+  assert.equal(fourColorStatusResponse.statusCode, 200)
+  assert.equal(fourColorStatusResponse.json().panel, 'gdem075f52')
+  assert.equal(fourColorStatusResponse.json().width, 800)
+  assert.equal(fourColorStatusResponse.json().height, 480)
+  assert.equal(fourColorStatusResponse.json().palette, 'black-white-yellow-red')
+
   const previewResponse = await app.inject({
     method: 'GET',
     url: `/api/eink/preview.html?openid=${openid}&width=296&height=128&layout=single&page=1&date=2026-05-20`,

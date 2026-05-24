@@ -5,6 +5,13 @@ const TOKEN_STORAGE_KEY = 'starachiever_stats_admin_token';
 const API_STORAGE_KEY = 'starachiever_stats_api_base_url';
 const EINK_DEVICE_TOKEN_STORAGE_KEY = 'starachiever_eink_device_token';
 
+type EinkPanelId = 'epd-4in2-bwr' | 'gdem075f52';
+
+const EINK_PANELS: Record<EinkPanelId, { label: string; width: number; height: number }> = {
+  'epd-4in2-bwr': { label: '4.2 英寸三色', width: 400, height: 300 },
+  gdem075f52: { label: '7.5 英寸四色', width: 800, height: 480 },
+};
+
 interface ChildStats {
   id: string;
   name: string;
@@ -196,6 +203,7 @@ const StatsDashboard: React.FC = () => {
   const [apiBaseUrl, setApiBaseUrl] = useState(() => localStorage.getItem(API_STORAGE_KEY) || DEFAULT_API_BASE_URL);
   const [adminToken, setAdminToken] = useState(() => localStorage.getItem(TOKEN_STORAGE_KEY) || '');
   const [einkDeviceToken, setEinkDeviceToken] = useState(() => localStorage.getItem(EINK_DEVICE_TOKEN_STORAGE_KEY) || '');
+  const [einkPanel, setEinkPanel] = useState<EinkPanelId>('epd-4in2-bwr');
   const [einkWidth, setEinkWidth] = useState(400);
   const [einkHeight, setEinkHeight] = useState(300);
   const [einkLayout, setEinkLayout] = useState<'auto' | 'single' | 'split'>('split');
@@ -281,6 +289,7 @@ const StatsDashboard: React.FC = () => {
 
       const params = new URLSearchParams({
         openid: selectedOpenid,
+        panel: einkPanel,
         width: String(einkWidth),
         height: String(einkHeight),
         layout: einkLayout,
@@ -463,7 +472,7 @@ const StatsDashboard: React.FC = () => {
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
                   <h2 className="text-lg font-bold">墨水屏预览</h2>
-                  <p className="mt-1 text-sm text-gray-500">生成 ESP32 可请求的三色图片预览，支持自定义分辨率。</p>
+                  <p className="mt-1 text-sm text-gray-500">生成 ESP32 可请求的面板像素图，支持三色、四色屏和自定义分辨率。</p>
                 </div>
                 <button
                   className="h-10 rounded-md bg-[#1F2933] px-4 text-sm font-bold text-white disabled:opacity-50"
@@ -474,7 +483,7 @@ const StatsDashboard: React.FC = () => {
                 </button>
               </div>
 
-              <div className="mt-4 grid gap-3 md:grid-cols-[1fr_1fr_140px_140px_120px]">
+              <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_180px_150px_110px_110px_90px]">
                 <label className="flex flex-col gap-1 text-sm font-semibold text-gray-600">
                   设备 token
                   <input
@@ -484,6 +493,23 @@ const StatsDashboard: React.FC = () => {
                     onChange={(event) => setEinkDeviceToken(event.target.value)}
                     placeholder="EINK_DEVICE_TOKEN"
                   />
+                </label>
+                <label className="flex flex-col gap-1 text-sm font-semibold text-gray-600">
+                  屏幕型号
+                  <select
+                    className="h-10 rounded-md border border-gray-200 px-3 text-sm font-normal outline-none focus:border-[#FF6348]"
+                    value={einkPanel}
+                    onChange={(event) => {
+                      const panel = event.target.value as EinkPanelId;
+                      setEinkPanel(panel);
+                      setEinkWidth(EINK_PANELS[panel].width);
+                      setEinkHeight(EINK_PANELS[panel].height);
+                    }}
+                  >
+                    {(Object.entries(EINK_PANELS) as Array<[EinkPanelId, (typeof EINK_PANELS)[EinkPanelId]]>).map(([id, panel]) => (
+                      <option key={id} value={id}>{panel.label}</option>
+                    ))}
+                  </select>
                 </label>
                 <label className="flex flex-col gap-1 text-sm font-semibold text-gray-600">
                   分辨率
@@ -557,7 +583,7 @@ const StatsDashboard: React.FC = () => {
                   </div>
                   <div className="rounded-md bg-gray-50 p-3 text-xs text-gray-600">
                     <p className="font-bold text-gray-800">设备请求</p>
-                    <p className="mt-2 break-all">GET /api/eink/image.png?openid={selectedOpenid}&width={einkWidth}&height={einkHeight}&layout={einkLayout}&page={einkPage}&date={date}</p>
+                    <p className="mt-2 break-all">GET /api/eink/image.png?openid={selectedOpenid}&panel={einkPanel}&width={einkWidth}&height={einkHeight}&layout={einkLayout}&page={einkPage}&date={date}</p>
                     <p className="mt-2">Header: X-Device-Token</p>
                     <p>Header: X-User-Token</p>
                     {einkUserToken && <p className="mt-2 break-all">userToken: {einkUserToken}</p>}

@@ -89,7 +89,7 @@ VITE_STARACHIEVER_API_BASE_URL=https://stars.followllm.online npm run build
 
 ## ESP32 墨水屏
 
-服务端提供已渲染好的 PNG 图片接口，ESP32 可以定时下载并显示到黑白红三色墨水屏。接入说明见 [docs/ESP32_EINK.md](docs/ESP32_EINK.md)。
+服务端提供已渲染好的 PNG 图片接口，ESP32 可以定时下载并显示到三色或四色电子纸屏幕。接入说明见 [docs/ESP32_EINK.md](docs/ESP32_EINK.md)。
 
 ## 项目结构
 

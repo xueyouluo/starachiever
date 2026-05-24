@@ -7,6 +7,25 @@ let browserPromise = null
 const EINK_BLACK = [0, 0, 0, 255]
 const EINK_WHITE = [255, 255, 255, 255]
 const EINK_RED = [255, 0, 0, 255]
+const EINK_YELLOW = [255, 255, 0, 255]
+
+const DEFAULT_EINK_PANEL = 'epd-4in2-bwr'
+const EINK_PANELS = Object.freeze({
+  [DEFAULT_EINK_PANEL]: {
+    id: DEFAULT_EINK_PANEL,
+    width: 400,
+    height: 300,
+    palette: 'black-white-red',
+    layout: 'split',
+  },
+  gdem075f52: {
+    id: 'gdem075f52',
+    width: 800,
+    height: 480,
+    palette: 'black-white-yellow-red',
+    layout: 'split',
+  },
+})
 
 const clampInt = (value, fallback, min, max) => {
   const number = Number.parseInt(value, 10)
@@ -36,9 +55,10 @@ const safeEqual = (left, right) => {
   return a.length === b.length && timingSafeEqual(a, b)
 }
 
-export const quantizeEinkPng = (source) => {
+export const quantizeEinkPng = (source, palette = EINK_PANELS[DEFAULT_EINK_PANEL].palette) => {
   const image = PNG.sync.read(source)
   const { data } = image
+  const hasYellow = palette.includes('yellow')
 
   for (let offset = 0; offset < data.length; offset += 4) {
     const alpha = data[offset + 3] / 255
@@ -47,7 +67,9 @@ export const quantizeEinkPng = (source) => {
     const blue = Math.round(data[offset + 2] * alpha + 255 * (1 - alpha))
     const luminance = (red * 299 + green * 587 + blue * 114) / 1000
     const isRed = red >= 128 && red - green >= 48 && red - blue >= 48
-    const ink = isRed ? EINK_RED : luminance < 132 ? EINK_BLACK : EINK_WHITE
+    const isYellow = hasYellow && red >= 160 && green >= 128 && blue <= 128 &&
+      red - blue >= 48 && green - blue >= 48
+    const ink = isYellow ? EINK_YELLOW : isRed ? EINK_RED : luminance < 132 ? EINK_BLACK : EINK_WHITE
 
     data[offset] = ink[0]
     data[offset + 1] = ink[1]
@@ -68,15 +90,18 @@ export const verifyEinkUserToken = ({ openid, token, secret }) => safeEqual(
 )
 
 export const parseEinkOptions = (query = {}) => {
-  const width = clampInt(query.width, 400, 200, 1600)
-  const height = clampInt(query.height, 300, 100, 1200)
+  const panel = EINK_PANELS[query.panel] || EINK_PANELS[DEFAULT_EINK_PANEL]
+  const width = clampInt(query.width, panel.width, 200, 1600)
+  const height = clampInt(query.height, panel.height, 100, 1200)
   const page = clampInt(query.page, 0, 0, 20)
-  const requestedLayout = ['single', 'split', 'auto'].includes(query.layout) ? query.layout : 'split'
+  const requestedLayout = ['single', 'split', 'auto'].includes(query.layout) ? query.layout : panel.layout
   const layout = requestedLayout === 'auto'
     ? (width >= 640 && height >= 240 ? 'split' : 'single')
     : requestedLayout
 
   return {
+    panel: panel.id,
+    palette: panel.palette,
     width,
     height,
     page,
@@ -121,7 +146,8 @@ export const createEinkStatus = ({ snapshot, dateKey, options, summarizeSnapshot
     page: options.page,
     width: options.width,
     height: options.height,
-    palette: 'black-white-red',
+    panel: options.panel,
+    palette: options.palette,
     children,
     visibleChildren,
   }
@@ -129,6 +155,7 @@ export const createEinkStatus = ({ snapshot, dateKey, options, summarizeSnapshot
 
 export const renderEinkHtml = (status) => {
   const { width, height, visibleChildren } = status
+  const headerBackground = status.palette.includes('yellow') ? '#ff0' : '#fff'
   const split = status.layout === 'split' && visibleChildren.length > 1
   const screenPadding = Math.max(8, Math.floor(Math.min(width, height) * 0.035))
   const headerHeight = Math.max(20, Math.floor(height * 0.095))
@@ -202,6 +229,7 @@ export const renderEinkHtml = (status) => {
       justify-content: space-between;
       height: ${headerHeight}px;
       border-bottom: 2px solid #000;
+      background: ${headerBackground};
       font-weight: 800;
     }
     .brand {
@@ -401,7 +429,7 @@ export const renderEinkPng = async ({ status, chromeExecutablePath }) => {
       type: 'png',
       clip: { x: 0, y: 0, width: status.width, height: status.height },
     })
-    return quantizeEinkPng(screenshot)
+    return quantizeEinkPng(screenshot, status.palette)
   } finally {
     await page.close()
   }

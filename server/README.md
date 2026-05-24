@@ -46,11 +46,18 @@ The server process listens on port `3001`; nginx terminates HTTPS and proxies `s
 - `GET /api/admin/users?date=YYYY-MM-DD` with `Authorization: Bearer <ADMIN_READ_TOKEN>`
 - `GET /api/admin/users/:openid/stats?date=YYYY-MM-DD` with `Authorization: Bearer <ADMIN_READ_TOKEN>`
 - `GET /api/admin/users/:openid/eink-token` with `Authorization: Bearer <ADMIN_READ_TOKEN>`
-- `GET /api/eink/status?openid=<openid>&width=400&height=300&layout=split&page=0` with `X-Device-Token` and `X-User-Token`
-- `GET /api/eink/image.png?openid=<openid>&width=400&height=300&layout=split&page=0` with `X-Device-Token` and `X-User-Token`
-- `GET /api/eink/preview.html?openid=<openid>&width=400&height=300&layout=split&page=0` with `X-Device-Token` and `X-User-Token`
+- `GET /api/eink/status?openid=<openid>&panel=epd-4in2-bwr&layout=split&page=0` with `X-Device-Token` and `X-User-Token`
+- `GET /api/eink/image.png?openid=<openid>&panel=gdem075f52&layout=split&page=0` with `X-Device-Token` and `X-User-Token`
+- `GET /api/eink/preview.html?openid=<openid>&panel=gdem075f52&layout=split&page=0` with `X-Device-Token` and `X-User-Token`
 
-The e-ink image endpoint renders HTML through Chrome, quantizes it to the panel palette (`#000000`, `#FFFFFF`, `#FF0000`), and returns PNG, so the stats-page preview and device image share the same pixels. It defaults to `400x300` and `layout=split`, and supports custom `width` and `height`; `layout=auto` uses two children side-by-side on larger screens and single-child paging on smaller screens.
+The e-ink image endpoint renders HTML through Chrome, quantizes it to the selected panel palette, and returns PNG, so the stats-page preview and device image share the same pixels. Omitting `panel` remains compatible with existing 4.2 inch devices and selects `epd-4in2-bwr`.
+
+| `panel` | Default size | Palette |
+| --- | --- | --- |
+| `epd-4in2-bwr` | `400x300` | `#000000`, `#FFFFFF`, `#FF0000` |
+| `gdem075f52` | `800x480` | `#000000`, `#FFFFFF`, `#FFFF00`, `#FF0000` |
+
+Custom `width` and `height` still override the selected panel dimensions. `layout=auto` uses two children side-by-side on larger screens and single-child paging on smaller screens.
 
 The mini-program uses local-first sync:
 
