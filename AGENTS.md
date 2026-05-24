@@ -8,6 +8,23 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 - **Build**: `npm run build` - Creates production build
 - **Preview**: `npm run preview` - Preview production build locally
 
+## Production Server Deployment
+
+- **SSH**: `ssh root@47.97.157.160`
+- **Repository directory**: `/root/workspace/code/starachiever`
+- **Server directory**: `/root/workspace/code/starachiever/server`
+- **Public API URL**: `https://stars.followllm.online`
+- **Service manager**: `systemd` unit `starachiever.service`; do not deploy or restart the API through `tmux`.
+
+Deployment flow for server changes:
+
+1. Run `cd server && npm test && npm run check` locally.
+2. Commit and push the intended tracked changes to `origin/main`; do not include unrelated dirty files.
+3. On production, run `cd /root/workspace/code/starachiever && git pull --ff-only origin main`.
+4. Run `cd /root/workspace/code/starachiever/server && npm test && npm run check` on production before restart.
+5. Restart with `systemctl restart starachiever.service`.
+6. Verify with `systemctl --no-pager --full status starachiever.service` and `curl -fsS http://127.0.0.1:3001/api/health`.
+
 ## Architecture Overview
 
 **Data Storage**: All application data is persisted in localStorage under key `starachiever_data_v6`. The app supports data migration from earlier versions (v4, v5).
