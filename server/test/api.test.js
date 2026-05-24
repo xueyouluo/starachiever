@@ -261,6 +261,17 @@ test('eink endpoints require device and user tokens and expose preview html', as
   assert.equal(fourColorStatusResponse.json().width, 800)
   assert.equal(fourColorStatusResponse.json().height, 480)
   assert.equal(fourColorStatusResponse.json().palette, 'black-white-yellow-red')
+  assert.equal(fourColorStatusResponse.json().nativeFormat, 'acep-2bpp')
+
+  const invalidFrameResponse = await app.inject({
+    method: 'GET',
+    url: `/api/eink/frame.bin?openid=${openid}&panel=gdem075f52&width=400&height=300&date=2026-05-20`,
+    headers: {
+      'x-device-token': 'device-secret',
+      'x-user-token': tokenResponse.json().userToken,
+    },
+  })
+  assert.equal(invalidFrameResponse.statusCode, 400)
 
   const previewResponse = await app.inject({
     method: 'GET',

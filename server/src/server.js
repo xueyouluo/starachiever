@@ -6,8 +6,10 @@ import {
   createEinkStatus,
   createEinkUserToken,
   parseEinkOptions,
+  renderEinkFrame,
   renderEinkHtml,
   renderEinkPng,
+  usesNativeEinkSize,
   verifyEinkUserToken,
 } from './eink.js'
 
@@ -389,6 +391,40 @@ export const createServer = ({ config, repository }) => {
         .send(png)
     } catch (error) {
       request.log.warn({ err: error }, 'eink png render failed')
+      return reply.code(503).send({ error: 'chrome renderer unavailable' })
+    }
+  })
+
+  app.get('/api/eink/frame.bin', async (request, reply) => {
+    const auth = authenticateEinkRequest(request, reply)
+    if (!auth) return reply
+
+    const options = parseEinkOptions(request.query)
+    const dateKey = getDateKey(options.date)
+    const status = createEinkStatus({
+      snapshot: auth.snapshot,
+      dateKey,
+      options,
+      summarizeSnapshot,
+    })
+
+    if (!usesNativeEinkSize(status)) {
+      return reply.code(400).send({ error: 'frame.bin requires native panel dimensions' })
+    }
+
+    try {
+      const frame = await renderEinkFrame({
+        status,
+        chromeExecutablePath: config.chromeExecutablePath,
+      })
+      return reply
+        .type('application/octet-stream')
+        .header('Cache-Control', 'no-store')
+        .header('X-Eink-Panel', status.panel)
+        .header('X-Eink-Format', status.nativeFormat)
+        .send(frame)
+    } catch (error) {
+      request.log.warn({ err: error }, 'eink native frame render failed')
       return reply.code(503).send({ error: 'chrome renderer unavailable' })
     }
   })

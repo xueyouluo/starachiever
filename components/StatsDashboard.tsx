@@ -583,7 +583,10 @@ const StatsDashboard: React.FC = () => {
                   </div>
                   <div className="rounded-md bg-gray-50 p-3 text-xs text-gray-600">
                     <p className="font-bold text-gray-800">设备请求</p>
-                    <p className="mt-2 break-all">GET /api/eink/image.png?openid={selectedOpenid}&panel={einkPanel}&width={einkWidth}&height={einkHeight}&layout={einkLayout}&page={einkPage}&date={date}</p>
+                    <p className="mt-2 font-bold text-gray-800">PNG 预览</p>
+                    <p className="break-all">GET /api/eink/image.png?openid={selectedOpenid}&panel={einkPanel}&width={einkWidth}&height={einkHeight}&layout={einkLayout}&page={einkPage}&date={date}</p>
+                    <p className="mt-2 font-bold text-gray-800">固件紧凑帧（原生尺寸）</p>
+                    <p className="break-all">GET /api/eink/frame.bin?openid={selectedOpenid}&panel={einkPanel}&layout={einkLayout}&page={einkPage}&date={date}</p>
                     <p className="mt-2">Header: X-Device-Token</p>
                     <p>Header: X-User-Token</p>
                     {einkUserToken && <p className="mt-2 break-all">userToken: {einkUserToken}</p>}

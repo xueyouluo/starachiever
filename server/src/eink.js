@@ -16,6 +16,7 @@ const EINK_PANELS = Object.freeze({
     width: 400,
     height: 300,
     palette: 'black-white-red',
+    nativeFormat: 'bwr-planes-1bpp',
     layout: 'split',
   },
   gdem075f52: {
@@ -23,9 +24,12 @@ const EINK_PANELS = Object.freeze({
     width: 800,
     height: 480,
     palette: 'black-white-yellow-red',
+    nativeFormat: 'acep-2bpp',
     layout: 'split',
   },
 })
+
+const getEinkPanel = (panel) => EINK_PANELS[panel] || EINK_PANELS[DEFAULT_EINK_PANEL]
 
 const clampInt = (value, fallback, min, max) => {
   const number = Number.parseInt(value, 10)
@@ -80,6 +84,52 @@ export const quantizeEinkPng = (source, palette = EINK_PANELS[DEFAULT_EINK_PANEL
   return PNG.sync.write(image)
 }
 
+const isPixel = (data, offset, red, green, blue) => (
+  data[offset] === red && data[offset + 1] === green && data[offset + 2] === blue
+)
+
+export const packEinkFrame = ({ source, panel = DEFAULT_EINK_PANEL }) => {
+  const profile = getEinkPanel(panel)
+  const image = PNG.sync.read(source)
+  const { width, height, data } = image
+
+  if (profile.nativeFormat === 'acep-2bpp') {
+    const frame = Buffer.alloc(Math.ceil(width / 4) * height, 0x55)
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const offset = (y * width + x) * 4
+        const value = isPixel(data, offset, 0, 0, 0) ? 0x00
+          : isPixel(data, offset, 255, 255, 0) ? 0x02
+            : isPixel(data, offset, 255, 0, 0) ? 0x03
+              : 0x01
+        const frameOffset = y * Math.ceil(width / 4) + Math.floor(x / 4)
+        const shift = 6 - (x % 4) * 2
+        frame[frameOffset] = (frame[frameOffset] & ~(0x03 << shift)) | (value << shift)
+      }
+    }
+    return frame
+  }
+
+  const bytesPerRow = Math.ceil(width / 8)
+  const planeBytes = bytesPerRow * height
+  const frame = Buffer.alloc(planeBytes * 2, 0xFF)
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const offset = (y * width + x) * 4
+      const mask = 0x80 >> (x % 8)
+      const planeOffset = y * bytesPerRow + Math.floor(x / 8)
+      if (isPixel(data, offset, 0, 0, 0)) frame[planeOffset] &= ~mask
+      if (isPixel(data, offset, 255, 0, 0)) frame[planeBytes + planeOffset] &= ~mask
+    }
+  }
+  return frame
+}
+
+export const usesNativeEinkSize = ({ panel, width, height }) => {
+  const profile = getEinkPanel(panel)
+  return profile.width === width && profile.height === height
+}
+
 export const createEinkUserToken = ({ openid, secret }) => createHmac('sha256', secret)
   .update(openid)
   .digest('hex')
@@ -90,7 +140,7 @@ export const verifyEinkUserToken = ({ openid, token, secret }) => safeEqual(
 )
 
 export const parseEinkOptions = (query = {}) => {
-  const panel = EINK_PANELS[query.panel] || EINK_PANELS[DEFAULT_EINK_PANEL]
+  const panel = getEinkPanel(query.panel)
   const width = clampInt(query.width, panel.width, 200, 1600)
   const height = clampInt(query.height, panel.height, 100, 1200)
   const page = clampInt(query.page, 0, 0, 20)
@@ -102,6 +152,7 @@ export const parseEinkOptions = (query = {}) => {
   return {
     panel: panel.id,
     palette: panel.palette,
+    nativeFormat: panel.nativeFormat,
     width,
     height,
     page,
@@ -148,6 +199,7 @@ export const createEinkStatus = ({ snapshot, dateKey, options, summarizeSnapshot
     height: options.height,
     panel: options.panel,
     palette: options.palette,
+    nativeFormat: options.nativeFormat,
     children,
     visibleChildren,
   }
@@ -433,4 +485,9 @@ export const renderEinkPng = async ({ status, chromeExecutablePath }) => {
   } finally {
     await page.close()
   }
+}
+
+export const renderEinkFrame = async ({ status, chromeExecutablePath }) => {
+  const png = await renderEinkPng({ status, chromeExecutablePath })
+  return packEinkFrame({ source: png, panel: status.panel })
 }
